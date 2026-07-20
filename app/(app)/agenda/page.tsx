@@ -71,7 +71,7 @@ export default async function AgendaPage() {
                 key={day.label}
                 type="button"
                 className={`rounded-2xl px-2 py-3 text-center transition ${
-                  day.active ? "bg-[var(--hp-accent)] text-[#04100a]" : "bg-white/[0.04] text-zinc-400"
+                  day.active ? "bg-[var(--hp-accent)] text-[#04100a]" : "bg-slate-50 text-zinc-400"
                 }`}
               >
                 <span className="block text-xs font-bold">{day.label}</span>
@@ -87,7 +87,7 @@ export default async function AgendaPage() {
               <p className="text-sm font-black uppercase tracking-wide text-[var(--hp-accent)]">Hoje</p>
               <h2 className="text-2xl font-black">{formatDate(new Date())}</h2>
             </div>
-            <div className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-zinc-300">
+            <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
               {upcoming.length} horarios
             </div>
           </div>
@@ -112,7 +112,7 @@ export default async function AgendaPage() {
                   {appointment ? (
                     <article
                       draggable
-                      className="rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-4 transition hover:border-emerald-400/40 hover:bg-white/[0.08]"
+                      className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 transition hover:border-emerald-400/40 hover:bg-slate-100"
                     >
                       <div className="flex items-start gap-3">
                         <GripVertical className="mt-1 h-5 w-5 shrink-0 text-zinc-500" />
@@ -132,7 +132,7 @@ export default async function AgendaPage() {
                               <CheckCircle2 className="mx-auto mb-1 h-4 w-4" />
                               Confirmar
                             </button>
-                            <button type="button" className="rounded-full bg-white/10 px-3 py-2 text-xs font-black text-zinc-300">
+                            <button type="button" className="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600">
                               <RotateCcw className="mx-auto mb-1 h-4 w-4" />
                               Remarcar
                             </button>
@@ -145,7 +145,7 @@ export default async function AgendaPage() {
                       </div>
                     </article>
                   ) : (
-                    <div className="rounded-[1.5rem] border border-dashed border-white/10 p-4 text-sm text-zinc-500">
+                    <div className="rounded-[1.5rem] border border-dashed border-slate-200 p-4 text-sm text-zinc-500">
                       Arraste um atendimento para este horario ou toque em Novo.
                     </div>
                   )}
@@ -157,7 +157,7 @@ export default async function AgendaPage() {
       </div>
 
       <aside className="grid gap-5 lg:content-start">
-        <Card className="hp-card rounded-[2rem] border-white/10 bg-transparent text-white">
+        <Card className="hp-card rounded-[2rem] border-slate-200 bg-transparent text-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl">
               <Clock3 className="h-5 w-5 text-[var(--hp-accent)]" />
@@ -166,20 +166,20 @@ export default async function AgendaPage() {
           </CardHeader>
           <CardContent>
             <form action={createAvailabilityRuleAction} className="grid gap-3">
-              <Select name="professionalId" className="h-12 rounded-2xl border-white/10 bg-white/10 text-white">
+              <Select name="professionalId" className="h-12 rounded-2xl border-slate-200 bg-white text-slate-950">
                 <option value="">Todos os profissionais</option>
                 {professionals.map((professional) => (
                   <option key={professional.id} value={professional.id}>{professional.name}</option>
                 ))}
               </Select>
-              <Select name="weekday" className="h-12 rounded-2xl border-white/10 bg-white/10 text-white">
+              <Select name="weekday" className="h-12 rounded-2xl border-slate-200 bg-white text-slate-950">
                 {fullWeekdays.map((weekday, index) => (
                   <option key={weekday} value={index}>{weekday}</option>
                 ))}
               </Select>
               <div className="grid grid-cols-2 gap-3">
-                <Input name="startTime" type="time" defaultValue="09:00" required className="h-12 rounded-2xl border-white/10 bg-white/10 text-white" />
-                <Input name="endTime" type="time" defaultValue="18:00" required className="h-12 rounded-2xl border-white/10 bg-white/10 text-white" />
+                <Input name="startTime" type="time" defaultValue="09:00" required className="h-12 rounded-2xl border-slate-200 bg-white text-slate-950" />
+                <Input name="endTime" type="time" defaultValue="18:00" required className="h-12 rounded-2xl border-slate-200 bg-white text-slate-950" />
               </div>
               <Button type="submit" className="h-12 rounded-full bg-white text-[#04100a] font-black hover:bg-zinc-100">
                 Salvar horario
@@ -190,7 +190,7 @@ export default async function AgendaPage() {
 
         <ProfessionalsPanel professionals={professionals} />
 
-        <Card className="hp-card rounded-[2rem] border-white/10 bg-transparent text-white">
+        <Card className="hp-card rounded-[2rem] border-slate-200 bg-transparent text-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl">
               <CalendarCheck className="h-5 w-5 text-[var(--hp-accent)]" />
@@ -204,12 +204,12 @@ export default async function AgendaPage() {
               rules.slice(0, 5).map((rule) => {
                 const professional = Array.isArray(rule.professional) ? rule.professional[0] : rule.professional;
                 return (
-                  <div key={rule.id} className="flex items-center justify-between rounded-2xl bg-white/[0.04] p-3 text-sm">
+                  <div key={rule.id} className="flex items-center justify-between rounded-2xl bg-slate-50 p-3 text-sm">
                     <div>
                       <strong>{fullWeekdays[rule.weekday]}</strong>
                       <p className="text-zinc-500">{professional?.name ?? "Todos"}</p>
                     </div>
-                    <span className="flex items-center gap-1 text-zinc-300">
+                    <span className="flex items-center gap-1 text-slate-600">
                       {rule.start_time} <MoveRight className="h-3 w-3" /> {rule.end_time}
                     </span>
                   </div>

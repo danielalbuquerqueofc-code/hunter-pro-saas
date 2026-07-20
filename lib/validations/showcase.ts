@@ -5,8 +5,16 @@ export const showcaseSchema = z.object({
   subtitle: z.string().optional(),
   description: z.string().optional(),
   heroImageUrl: z.string().url("Informe uma URL valida.").optional().or(z.literal("")),
+  logoUrl: z.string().url("Informe uma URL valida.").optional().or(z.literal("")),
   whatsapp: z.string().optional(),
+  phone: z.string().optional(),
   instagramUrl: z.string().url("Informe uma URL valida.").optional().or(z.literal("")),
+  facebookUrl: z.string().url("Informe uma URL valida.").optional().or(z.literal("")),
+  tiktokUrl: z.string().url("Informe uma URL valida.").optional().or(z.literal("")),
+  youtubeUrl: z.string().url("Informe uma URL valida.").optional().or(z.literal("")),
+  addressText: z.string().optional(),
+  themeKey: z.enum(["clean_light", "premium_dark", "beauty", "wellness", "professional_blue", "gold"]),
+  fontKey: z.enum(["sans", "serif", "rounded"]),
   status: z.enum(["DRAFT", "PUBLISHED"])
 });
 

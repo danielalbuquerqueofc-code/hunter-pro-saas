@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
-  --hp-bg: #070b0f;
-  --hp-surface: #10161d;
-  --hp-surface-soft: #151d25;
-  --hp-line: rgba(255, 255, 255, 0.08);
-  --hp-text: #f8fafc;
-  --hp-muted: #94a3b8;
+  color-scheme: light;
+  --hp-bg: #f6f8fb;
+  --hp-surface: #ffffff;
+  --hp-surface-soft: #eef2f7;
+  --hp-line: rgba(15, 23, 42, 0.08);
+  --hp-text: #0f172a;
+  --hp-muted: #64748b;
   --hp-accent: #22c55e;
   --hp-accent-soft: rgba(34, 197, 94, 0.14);
 }
@@ -21,8 +21,8 @@
 body {
   margin: 0;
   background:
-    radial-gradient(circle at 20% 0%, rgba(34, 197, 94, 0.12), transparent 32rem),
-    radial-gradient(circle at 90% 10%, rgba(14, 165, 233, 0.09), transparent 28rem),
+    radial-gradient(circle at 20% 0%, rgba(34, 197, 94, 0.12), transparent 28rem),
+    radial-gradient(circle at 90% 10%, rgba(14, 165, 233, 0.08), transparent 26rem),
     var(--hp-bg);
   color: var(--hp-text);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -40,8 +40,9 @@ a {
 
 .hp-card {
   border: 1px solid var(--hp-line);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.035));
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(18px);
 }
 

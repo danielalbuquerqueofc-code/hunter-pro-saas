@@ -25,6 +25,7 @@ export default async function VitrinePage() {
       </div>
 
       <ShowcaseStudio
+        organizationId={organization.id}
         organizationName={organization.name}
         publicUrl={publicUrl}
         showcase={showcase}

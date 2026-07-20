@@ -22,8 +22,16 @@ export async function saveShowcaseAction(formData: FormData) {
     subtitle: formData.get("subtitle"),
     description: formData.get("description"),
     heroImageUrl: formData.get("heroImageUrl"),
+    logoUrl: formData.get("logoUrl"),
     whatsapp: formData.get("whatsapp"),
+    phone: formData.get("phone"),
     instagramUrl: formData.get("instagramUrl"),
+    facebookUrl: formData.get("facebookUrl"),
+    tiktokUrl: formData.get("tiktokUrl"),
+    youtubeUrl: formData.get("youtubeUrl"),
+    addressText: formData.get("addressText"),
+    themeKey: formData.get("themeKey"),
+    fontKey: formData.get("fontKey"),
     status: formData.get("status")
   });
 
@@ -37,8 +45,16 @@ export async function saveShowcaseAction(formData: FormData) {
       subtitle: parsed.data.subtitle || null,
       description: parsed.data.description || null,
       hero_image_url: parsed.data.heroImageUrl || null,
+      logo_url: parsed.data.logoUrl || null,
       whatsapp: parsed.data.whatsapp || null,
+      phone: parsed.data.phone || null,
       instagram_url: parsed.data.instagramUrl || null,
+      facebook_url: parsed.data.facebookUrl || null,
+      tiktok_url: parsed.data.tiktokUrl || null,
+      youtube_url: parsed.data.youtubeUrl || null,
+      address_text: parsed.data.addressText || null,
+      theme_key: parsed.data.themeKey,
+      font_key: parsed.data.fontKey,
       status: parsed.data.status
     },
     { onConflict: "organization_id" }
@@ -67,8 +83,16 @@ export async function saveShowcaseStateAction(
     subtitle: formData.get("subtitle"),
     description: formData.get("description"),
     heroImageUrl: formData.get("heroImageUrl"),
+    logoUrl: formData.get("logoUrl"),
     whatsapp: formData.get("whatsapp"),
+    phone: formData.get("phone"),
     instagramUrl: formData.get("instagramUrl"),
+    facebookUrl: formData.get("facebookUrl"),
+    tiktokUrl: formData.get("tiktokUrl"),
+    youtubeUrl: formData.get("youtubeUrl"),
+    addressText: formData.get("addressText"),
+    themeKey: formData.get("themeKey"),
+    fontKey: formData.get("fontKey"),
     status: formData.get("status")
   });
 
@@ -84,8 +108,16 @@ export async function saveShowcaseStateAction(
       subtitle: parsed.data.subtitle || null,
       description: parsed.data.description || null,
       hero_image_url: parsed.data.heroImageUrl || null,
+      logo_url: parsed.data.logoUrl || null,
       whatsapp: parsed.data.whatsapp || null,
+      phone: parsed.data.phone || null,
       instagram_url: parsed.data.instagramUrl || null,
+      facebook_url: parsed.data.facebookUrl || null,
+      tiktok_url: parsed.data.tiktokUrl || null,
+      youtube_url: parsed.data.youtubeUrl || null,
+      address_text: parsed.data.addressText || null,
+      theme_key: parsed.data.themeKey,
+      font_key: parsed.data.fontKey,
       status: parsed.data.status
     },
     { onConflict: "organization_id" }

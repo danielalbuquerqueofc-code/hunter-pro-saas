@@ -26,8 +26,8 @@ export function AppShell({
   const publicHref = organizationSlug ? `/p/${organizationSlug}` : "/vitrine";
 
   return (
-    <div className="min-h-screen bg-[var(--hp-bg)] text-white">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#070b0f]/90 text-white shadow-2xl shadow-black/20 backdrop-blur-xl">
+    <div className="min-h-screen bg-[var(--hp-bg)] text-slate-950">
+      <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/90 text-slate-950 shadow-sm backdrop-blur-xl">
         <Topbar email={email} organizationName={organizationName} publicHref={publicHref} />
         <AppSidebar items={visibleNav} />
       </header>

@@ -38,21 +38,21 @@ export function Topbar({ email, organizationName, publicHref }: TopbarProps) {
         </div>
         <Link
           href="/crm"
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10 lg:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100 lg:hidden"
           aria-label="Buscar"
         >
           <Search className="h-5 w-5" />
         </Link>
         <Link
           href="/ia"
-          className="hidden h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10 md:flex"
+          className="hidden h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100 md:flex"
           aria-label="Assistente"
         >
           <Sparkles className="h-5 w-5" />
         </Link>
         <Link
           href={publicHref}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100"
           aria-label="Abrir vitrine"
         >
           <Eye className="h-5 w-5" />

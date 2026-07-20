@@ -72,13 +72,13 @@ export default async function FinanceiroPage() {
 
           <div className="mt-5 grid gap-3">
             {transactions.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-white/10 p-6 text-zinc-400">Nenhum lancamento financeiro ainda.</p>
+              <p className="rounded-2xl border border-dashed border-slate-200 p-6 text-zinc-400">Nenhum lancamento financeiro ainda.</p>
             ) : (
               transactions.map((transaction) => {
                 const category = Array.isArray(transaction.category) ? transaction.category[0] : transaction.category;
                 const isIncome = transaction.type === "INCOME";
                 return (
-                  <article key={transaction.id} className="flex items-center gap-4 rounded-[1.5rem] bg-white/[0.04] p-4">
+                  <article key={transaction.id} className="flex items-center gap-4 rounded-[1.5rem] bg-slate-50 p-4">
                     <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
                       isIncome ? "bg-emerald-400/10 text-[var(--hp-accent)]" : "bg-red-500/10 text-red-300"
                     }`}>

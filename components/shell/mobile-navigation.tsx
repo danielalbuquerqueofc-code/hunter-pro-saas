@@ -29,7 +29,7 @@ export function MobileNavigation({ items }: { items: MobileNavItem[] }) {
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 mx-auto grid max-w-md grid-cols-5 border-t border-white/10 bg-[#080d12]/95 pb-[env(safe-area-inset-bottom)] text-[11px] font-bold text-zinc-400 shadow-2xl shadow-black/40 backdrop-blur-xl lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 mx-auto grid max-w-md grid-cols-5 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] text-[11px] font-bold text-slate-500 shadow-2xl shadow-slate-900/10 backdrop-blur-xl lg:hidden">
       {preferred.map((item) => (
         (() => {
           const Icon = icons[item.href as keyof typeof icons] ?? Home;
@@ -38,7 +38,7 @@ export function MobileNavigation({ items }: { items: MobileNavItem[] }) {
               key={item.href}
               href={item.href}
               className={`flex min-h-16 flex-col items-center justify-center gap-1 px-1 py-2 transition ${
-                isActive(item.href) ? "text-[var(--hp-accent)]" : "hover:text-white"
+                isActive(item.href) ? "text-emerald-600" : "hover:text-slate-950"
               }`}
             >
               <span className={`rounded-2xl p-2 ${isActive(item.href) ? "bg-[var(--hp-accent-soft)]" : ""}`}>
@@ -52,7 +52,7 @@ export function MobileNavigation({ items }: { items: MobileNavItem[] }) {
       <Link
         href={moreHref}
         className={`flex min-h-16 flex-col items-center justify-center gap-1 px-1 py-2 transition ${
-          isActive(moreHref) ? "text-[var(--hp-accent)]" : "hover:text-white"
+          isActive(moreHref) ? "text-emerald-600" : "hover:text-slate-950"
         }`}
       >
         <span className={`rounded-2xl p-2 ${isActive(moreHref) ? "bg-[var(--hp-accent-soft)]" : ""}`}>

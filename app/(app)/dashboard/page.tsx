@@ -73,9 +73,9 @@ export default async function DashboardPage() {
   const publicUrl = `/p/${dashboard.organization.slug}`;
   const quickActions = [
     { href: "/agenda", label: "Novo agendamento", icon: Plus, tone: "bg-[var(--hp-accent)] text-[#04100a]" },
-    { href: "/clientes", label: "Novo cliente", icon: UserPlus, tone: "bg-white/10 text-white" },
-    { href: "/vitrine", label: "Editar vitrine", icon: Store, tone: "bg-white/10 text-white" },
-    { href: publicUrl, label: "Compartilhar", icon: Share2, tone: "bg-white/10 text-white" }
+    { href: "/clientes", label: "Novo cliente", icon: UserPlus, tone: "bg-slate-100 text-white" },
+    { href: "/vitrine", label: "Editar vitrine", icon: Store, tone: "bg-slate-100 text-white" },
+    { href: publicUrl, label: "Compartilhar", icon: Share2, tone: "bg-slate-100 text-white" }
   ];
 
   return (
@@ -85,7 +85,7 @@ export default async function DashboardPage() {
         initialStep={onboardingProgress?.current_step ?? 0}
       />
 
-      <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.03] p-5 shadow-2xl shadow-black/20 sm:p-7">
+      <div className="rounded-[2rem] border border-slate-200 bg-gradient-to-br from-white/10 to-white/[0.03] p-5 shadow-2xl shadow-black/20 sm:p-7">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-zinc-400">{getDateLabel()}</p>
@@ -106,22 +106,22 @@ export default async function DashboardPage() {
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
+          <div className="rounded-[1.5rem] border border-slate-200 bg-black/20 p-4">
             <CalendarDays className="h-6 w-6 text-[var(--hp-accent)]" />
             <p className="mt-4 text-3xl font-black">{today.length}</p>
             <p className="text-sm font-semibold text-zinc-400">Agendamentos hoje</p>
           </div>
-          <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
+          <div className="rounded-[1.5rem] border border-slate-200 bg-black/20 p-4">
             <WalletCards className="h-6 w-6 text-[var(--hp-accent)]" />
             <p className="mt-4 text-3xl font-black">{formatCurrency(balance)}</p>
             <p className="text-sm font-semibold text-zinc-400">Saldo simples</p>
           </div>
-          <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
+          <div className="rounded-[1.5rem] border border-slate-200 bg-black/20 p-4">
             <CircleDollarSign className="h-6 w-6 text-amber-300" />
             <p className="mt-4 text-3xl font-black">{formatCurrency(pendingReceivable)}</p>
             <p className="text-sm font-semibold text-zinc-400">A receber</p>
           </div>
-          <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
+          <div className="rounded-[1.5rem] border border-slate-200 bg-black/20 p-4">
             <MessageCircle className="h-6 w-6 text-sky-300" />
             <p className="mt-4 text-3xl font-black">{operations?.contactsThisMonth ?? 0}</p>
             <p className="text-sm font-semibold text-zinc-400">Novos contatos</p>
@@ -136,12 +136,12 @@ export default async function DashboardPage() {
               <p className="text-sm font-black uppercase tracking-wide text-[var(--hp-accent)]">Proximos horarios</p>
               <h2 className="mt-1 text-2xl font-black">Agenda do dia</h2>
             </div>
-            <Link href="/agenda" className="text-sm font-bold text-zinc-300 hover:text-white">Ver agenda</Link>
+            <Link href="/agenda" className="text-sm font-bold text-slate-600 hover:text-slate-950">Ver agenda</Link>
           </div>
 
           <div className="mt-5 grid gap-3">
             {upcoming.length === 0 ? (
-              <div className="rounded-[1.5rem] border border-dashed border-white/10 p-6 text-zinc-400">
+              <div className="rounded-[1.5rem] border border-dashed border-slate-200 p-6 text-zinc-400">
                 Nenhum agendamento futuro encontrado.
               </div>
             ) : (
@@ -149,7 +149,7 @@ export default async function DashboardPage() {
                 <Link
                   href="/agenda"
                   key={appointment.id}
-                  className="group flex items-center gap-4 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 transition hover:bg-white/[0.08]"
+                  className="group flex items-center gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100"
                 >
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[var(--hp-accent-soft)] font-black text-[var(--hp-accent)]">
                     {formatTime(appointment.starts_at)}
@@ -158,7 +158,7 @@ export default async function DashboardPage() {
                     <p className="truncate text-lg font-black">{appointment.customer_name}</p>
                     <p className="truncate text-sm text-zinc-400">{appointment.service?.name ?? "Servico nao informado"}</p>
                   </div>
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-zinc-300">
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
                     {appointment.status}
                   </span>
                 </Link>
@@ -195,7 +195,7 @@ export default async function DashboardPage() {
               <p className="text-zinc-400">Nada urgente agora. O dia esta limpo.</p>
             ) : (
               pendingTasks.map((task) => (
-                <Link key={task.id} href="/tarefas" className="rounded-2xl bg-white/[0.04] p-4">
+                <Link key={task.id} href="/tarefas" className="rounded-2xl bg-slate-50 p-4">
                   <p className="font-bold">{task.title}</p>
                   <p className="mt-1 text-sm text-zinc-500">{task.priority} · {task.status}</p>
                 </Link>
@@ -207,14 +207,14 @@ export default async function DashboardPage() {
         <div className="rounded-[2rem] border border-emerald-400/20 bg-[var(--hp-accent-soft)] p-5 sm:p-6">
           <Store className="h-8 w-8 text-[var(--hp-accent)]" />
           <h2 className="mt-4 text-2xl font-black">Sua vitrine esta pronta para vender</h2>
-          <p className="mt-2 text-zinc-300">
+          <p className="mt-2 text-slate-600">
             Atualize servicos, fotos, links e compartilhe seu endereco publico com QR Code.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link href="/vitrine" className="rounded-full bg-[var(--hp-accent)] px-5 py-3 font-black text-[#04100a]">
               Editar vitrine
             </Link>
-            <Link href={publicUrl} className="rounded-full border border-white/10 px-5 py-3 font-black text-white">
+            <Link href={publicUrl} className="rounded-full border border-slate-200 px-5 py-3 font-black text-white">
               Abrir pagina
             </Link>
           </div>

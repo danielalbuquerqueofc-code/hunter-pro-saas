@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { CalendarDays, Clock3, Instagram, MapPin, MessageCircle, Share2, Sparkles, Star } from "lucide-react";
+import { CalendarDays, Clock3, Facebook, Instagram, MapPin, MessageCircle, Phone, Play, Share2, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,9 +27,18 @@ export default async function PublicShowcasePage({ params }: PublicShowcasePageP
 
   const showcase = data.showcase;
   const heroImage = showcase.hero_image_url;
+  const themes = {
+    clean_light: "bg-slate-50 text-slate-950",
+    premium_dark: "bg-[#070b0f] text-white",
+    beauty: "bg-pink-50 text-slate-950",
+    wellness: "bg-emerald-50 text-slate-950",
+    professional_blue: "bg-blue-50 text-slate-950",
+    gold: "bg-amber-50 text-slate-950"
+  };
+  const pageTheme = themes[showcase.theme_key as keyof typeof themes] ?? themes.clean_light;
 
   return (
-    <main className="min-h-screen bg-[#070b0f] text-white">
+    <main className={`min-h-screen ${pageTheme}`}>
       <section className="mx-auto grid max-w-6xl gap-5 px-4 py-4 sm:px-6 lg:grid-cols-[1fr_420px] lg:py-8">
         <div className="grid gap-5">
           <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl">
@@ -44,7 +53,13 @@ export default async function PublicShowcasePage({ params }: PublicShowcasePageP
                   <Star className="h-4 w-4 fill-amber-300 text-amber-300" />
                   4,9 · Atendimento verificado
                 </div>
-                <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">{showcase.title}</h1>
+                <div className="flex items-end gap-4">
+                  {showcase.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={showcase.logo_url} alt="" className="h-20 w-20 rounded-[1.5rem] border-4 border-white object-cover shadow-xl" />
+                  ) : null}
+                  <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">{showcase.title}</h1>
+                </div>
                 {showcase.subtitle ? <p className="mt-3 max-w-2xl text-lg text-zinc-200">{showcase.subtitle}</p> : null}
               </div>
             </div>
@@ -62,6 +77,24 @@ export default async function PublicShowcasePage({ params }: PublicShowcasePageP
                   <a href={showcase.instagram_url} target="_blank" rel="noreferrer" className="rounded-full border border-white/10 px-6 py-4 font-black text-white">
                     <Instagram className="mr-2 inline h-5 w-5" />
                     Instagram
+                  </a>
+                ) : null}
+                {showcase.facebook_url ? (
+                  <a href={showcase.facebook_url} target="_blank" rel="noreferrer" className="rounded-full border border-white/10 px-6 py-4 font-black text-white">
+                    <Facebook className="mr-2 inline h-5 w-5" />
+                    Facebook
+                  </a>
+                ) : null}
+                {showcase.youtube_url ? (
+                  <a href={showcase.youtube_url} target="_blank" rel="noreferrer" className="rounded-full border border-white/10 px-6 py-4 font-black text-white">
+                    <Play className="mr-2 inline h-5 w-5" />
+                    YouTube
+                  </a>
+                ) : null}
+                {showcase.phone ? (
+                  <a href={`tel:${showcase.phone.replace(/\D/g, "")}`} className="rounded-full border border-white/10 px-6 py-4 font-black text-white">
+                    <Phone className="mr-2 inline h-5 w-5" />
+                    Ligar
                   </a>
                 ) : null}
               </div>
@@ -176,7 +209,7 @@ export default async function PublicShowcasePage({ params }: PublicShowcasePageP
           <div className="mt-4 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5">
             <div className="flex items-center gap-2 text-sm font-bold text-zinc-400">
               <MapPin className="h-4 w-4 text-[var(--hp-accent)]" />
-              Atendimento local ou online conforme disponibilidade.
+              {showcase.address_text || "Atendimento local ou online conforme disponibilidade."}
             </div>
           </div>
         </aside>

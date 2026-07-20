@@ -29,14 +29,23 @@ import {
   saveShowcaseStateAction,
   type ShowcaseActionState
 } from "@/features/showcase/actions";
+import { createClient } from "@/lib/supabase/client";
 
 type ShowcaseFormData = {
   title: string | null;
   subtitle: string | null;
   description: string | null;
   hero_image_url: string | null;
+  logo_url: string | null;
   whatsapp: string | null;
+  phone: string | null;
   instagram_url: string | null;
+  facebook_url: string | null;
+  tiktok_url: string | null;
+  youtube_url: string | null;
+  address_text: string | null;
+  theme_key: string | null;
+  font_key: string | null;
   status: string | null;
 } | null;
 
@@ -55,6 +64,7 @@ type ShowcaseService = {
 };
 
 type ShowcaseStudioProps = {
+  organizationId: string;
   organizationName: string;
   publicUrl: string;
   showcase: ShowcaseFormData;
@@ -69,10 +79,12 @@ type ShowcaseStudioProps = {
 
 const initialState: ShowcaseActionState = { ok: false };
 const themes = [
-  { name: "Studio premium", accent: "#22c55e", bg: "from-[#08110d] to-[#0b1117]" },
-  { name: "Clean claro", accent: "#111827", bg: "from-[#f8fafc] to-[#e2e8f0]" },
-  { name: "Solar", accent: "#f59e0b", bg: "from-[#1c1205] to-[#111827]" },
-  { name: "Azul service", accent: "#38bdf8", bg: "from-[#06121f] to-[#0f172a]" }
+  { key: "clean_light", name: "Clean claro", accent: "#111827", bg: "from-[#ffffff] to-[#eef2f7]", text: "text-slate-950" },
+  { key: "premium_dark", name: "Premium escuro", accent: "#22c55e", bg: "from-[#08110d] to-[#0b1117]", text: "text-white" },
+  { key: "beauty", name: "Beauty", accent: "#ec4899", bg: "from-[#fff1f7] to-[#ffe4ef]", text: "text-slate-950" },
+  { key: "wellness", name: "Wellness", accent: "#22c55e", bg: "from-[#eefdf4] to-[#dcfce7]", text: "text-slate-950" },
+  { key: "professional_blue", name: "Azul profissional", accent: "#0284c7", bg: "from-[#eff6ff] to-[#dbeafe]", text: "text-slate-950" },
+  { key: "gold", name: "Gold", accent: "#d97706", bg: "from-[#fffbeb] to-[#fde68a]", text: "text-slate-950" }
 ];
 
 function formatCurrency(cents: number) {
@@ -80,6 +92,7 @@ function formatCurrency(cents: number) {
 }
 
 export function ShowcaseStudio({
+  organizationId,
   organizationName,
   publicUrl,
   showcase,
@@ -89,14 +102,21 @@ export function ShowcaseStudio({
 }: ShowcaseStudioProps) {
   const [state, action] = useActionState(saveShowcaseStateAction, initialState);
   const [linkState, linkAction] = useActionState(createShowcaseLinkStateAction, initialState);
-  const [themeIndex, setThemeIndex] = useState(0);
+  const [themeKey, setThemeKey] = useState(showcase?.theme_key ?? "clean_light");
+  const [fontKey, setFontKey] = useState(showcase?.font_key ?? "sans");
   const [title, setTitle] = useState(showcase?.title ?? organizationName);
   const [subtitle, setSubtitle] = useState(showcase?.subtitle ?? "Atendimento simples, profissional e com agenda online.");
   const [description, setDescription] = useState(showcase?.description ?? "Escolha um servico, veja horarios e fale com a equipe em poucos toques.");
   const [heroImageUrl, setHeroImageUrl] = useState(showcase?.hero_image_url ?? "");
+  const [logoUrl, setLogoUrl] = useState(showcase?.logo_url ?? "");
   const [whatsapp, setWhatsapp] = useState(showcase?.whatsapp ?? "");
+  const [phone, setPhone] = useState(showcase?.phone ?? "");
   const [instagramUrl, setInstagramUrl] = useState(showcase?.instagram_url ?? "");
-  const selectedTheme = themes[themeIndex];
+  const [facebookUrl, setFacebookUrl] = useState(showcase?.facebook_url ?? "");
+  const [tiktokUrl, setTiktokUrl] = useState(showcase?.tiktok_url ?? "");
+  const [youtubeUrl, setYoutubeUrl] = useState(showcase?.youtube_url ?? "");
+  const [addressText, setAddressText] = useState(showcase?.address_text ?? "");
+  const selectedTheme = themes.find((theme) => theme.key === themeKey) ?? themes[0];
   const qrCodeUrl = useMemo(
     () => `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(publicUrl)}`,
     [publicUrl]
@@ -108,6 +128,25 @@ export function ShowcaseStudio({
   ];
   const copyPublicUrl = () => {
     void navigator.clipboard?.writeText(publicUrl);
+  };
+  const uploadAsset = async (file: File, kind: "logo" | "cover") => {
+    const supabase = createClient();
+    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const safeKind = kind === "logo" ? "logo" : "cover";
+    const path = `${organizationId}/showcase/${safeKind}-${Date.now()}.${extension}`;
+    const { error } = await supabase.storage.from("showcase-assets").upload(path, file, {
+      cacheControl: "3600",
+      upsert: true
+    });
+
+    if (error) {
+      window.alert("Nao foi possivel enviar a imagem. Verifique se a migration 0008 foi aplicada no Supabase.");
+      return;
+    }
+
+    const { data } = supabase.storage.from("showcase-assets").getPublicUrl(path);
+    if (kind === "logo") setLogoUrl(data.publicUrl);
+    if (kind === "cover") setHeroImageUrl(data.publicUrl);
   };
 
   return (
@@ -128,41 +167,99 @@ export function ShowcaseStudio({
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="title" className="text-zinc-300">Nome da vitrine</Label>
-                <Input id="title" name="title" value={title} onChange={(event) => setTitle(event.target.value)} required className="h-14 rounded-2xl border-white/10 bg-white/10 text-white" />
+                <Label htmlFor="title" className="text-slate-600">Nome da vitrine</Label>
+                <Input id="title" name="title" value={title} onChange={(event) => setTitle(event.target.value)} required className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="status" className="text-zinc-300">Status</Label>
-                <Select id="status" name="status" defaultValue={showcase?.status ?? "DRAFT"} className="h-14 rounded-2xl border-white/10 bg-white/10 text-white">
+                <Label htmlFor="status" className="text-slate-600">Status</Label>
+                <Select id="status" name="status" defaultValue={showcase?.status ?? "DRAFT"} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950">
                   <option value="DRAFT">Rascunho</option>
                   <option value="PUBLISHED">Publicado</option>
                 </Select>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="subtitle" className="text-zinc-300">Chamada principal</Label>
-              <Input id="subtitle" name="subtitle" value={subtitle} onChange={(event) => setSubtitle(event.target.value)} className="h-14 rounded-2xl border-white/10 bg-white/10 text-white" />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="themeKey" className="text-slate-600">Tema visual</Label>
+                <Select id="themeKey" name="themeKey" value={themeKey} onChange={(event) => setThemeKey(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950">
+                  {themes.map((theme) => (
+                    <option key={theme.key} value={theme.key}>{theme.name}</option>
+                  ))}
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="fontKey" className="text-slate-600">Tipografia</Label>
+                <Select id="fontKey" name="fontKey" value={fontKey} onChange={(event) => setFontKey(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950">
+                  <option value="sans">Moderna</option>
+                  <option value="serif">Editorial</option>
+                  <option value="rounded">Amigavel</option>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description" className="text-zinc-300">Descricao</Label>
-              <Textarea id="description" name="description" value={description} onChange={(event) => setDescription(event.target.value)} className="min-h-32 rounded-2xl border-white/10 bg-white/10 text-white" />
+              <Label htmlFor="subtitle" className="text-slate-600">Chamada principal</Label>
+              <Input id="subtitle" name="subtitle" value={subtitle} onChange={(event) => setSubtitle(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-slate-600">Descricao</Label>
+              <Textarea id="description" name="description" value={description} onChange={(event) => setDescription(event.target.value)} className="min-h-32 rounded-2xl border-slate-200 bg-white text-slate-950" />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <AssetUploadField
+                id="logoUpload"
+                label="Logo ou foto de perfil"
+                value={logoUrl}
+                onUpload={(file) => uploadAsset(file, "logo")}
+                onUrlChange={setLogoUrl}
+              />
+              <AssetUploadField
+                id="coverUpload"
+                label="Capa da vitrine"
+                value={heroImageUrl}
+                onUpload={(file) => uploadAsset(file, "cover")}
+                onUrlChange={setHeroImageUrl}
+              />
+              <input type="hidden" name="logoUrl" value={logoUrl} />
+              <input type="hidden" name="heroImageUrl" value={heroImageUrl} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="heroImageUrl" className="text-zinc-300">Foto/capa URL</Label>
-                <Input id="heroImageUrl" name="heroImageUrl" value={heroImageUrl} onChange={(event) => setHeroImageUrl(event.target.value)} className="h-14 rounded-2xl border-white/10 bg-white/10 text-white" />
+                <Label htmlFor="whatsapp" className="text-slate-600">WhatsApp</Label>
+                <Input id="whatsapp" name="whatsapp" value={whatsapp} onChange={(event) => setWhatsapp(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="whatsapp" className="text-zinc-300">WhatsApp</Label>
-                <Input id="whatsapp" name="whatsapp" value={whatsapp} onChange={(event) => setWhatsapp(event.target.value)} className="h-14 rounded-2xl border-white/10 bg-white/10 text-white" />
+                <Label htmlFor="phone" className="text-slate-600">Telefone</Label>
+                <Input id="phone" name="phone" value={phone} onChange={(event) => setPhone(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="instagramUrl" className="text-zinc-300">Instagram</Label>
-                <Input id="instagramUrl" name="instagramUrl" value={instagramUrl} onChange={(event) => setInstagramUrl(event.target.value)} className="h-14 rounded-2xl border-white/10 bg-white/10 text-white" />
+                <Label htmlFor="instagramUrl" className="text-slate-600">Instagram</Label>
+                <Input id="instagramUrl" name="instagramUrl" value={instagramUrl} onChange={(event) => setInstagramUrl(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
               </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="facebookUrl" className="text-slate-600">Facebook</Label>
+                <Input id="facebookUrl" name="facebookUrl" value={facebookUrl} onChange={(event) => setFacebookUrl(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tiktokUrl" className="text-slate-600">TikTok</Label>
+                <Input id="tiktokUrl" name="tiktokUrl" value={tiktokUrl} onChange={(event) => setTiktokUrl(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="youtubeUrl" className="text-slate-600">YouTube</Label>
+                <Input id="youtubeUrl" name="youtubeUrl" value={youtubeUrl} onChange={(event) => setYoutubeUrl(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="addressText" className="text-slate-600">Endereco ou area de atendimento</Label>
+              <Input id="addressText" name="addressText" value={addressText} onChange={(event) => setAddressText(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
             </div>
 
             <SubmitButton className="h-14 rounded-full bg-[var(--hp-accent)] text-base font-black text-[#04100a] hover:bg-emerald-400">
@@ -177,13 +274,13 @@ export function ShowcaseStudio({
             <h2 className="text-2xl font-black">Templates visuais</h2>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {themes.map((theme, index) => (
+            {themes.map((theme) => (
               <button
                 key={theme.name}
                 type="button"
-                onClick={() => setThemeIndex(index)}
+                onClick={() => setThemeKey(theme.key)}
                 className={`rounded-[1.5rem] border p-4 text-left transition ${
-                  index === themeIndex ? "border-emerald-400 bg-emerald-400/10" : "border-white/10 bg-white/[0.04]"
+                  theme.key === themeKey ? "border-emerald-400 bg-emerald-400/10" : "border-slate-200 bg-slate-50"
                 }`}
               >
                 <div className={`h-20 rounded-2xl bg-gradient-to-br ${theme.bg}`} />
@@ -205,13 +302,13 @@ export function ShowcaseStudio({
           <form action={linkAction} className="mt-5 grid gap-3">
             <FormMessage type="success">{linkState.message}</FormMessage>
             <FormMessage>{linkState.error}</FormMessage>
-            <Input name="label" placeholder="Instagram, WhatsApp, YouTube..." required className="h-14 rounded-2xl border-white/10 bg-white/10 text-white" />
-            <Input name="url" placeholder="https://..." required className="h-14 rounded-2xl border-white/10 bg-white/10 text-white" />
+            <Input name="label" placeholder="Instagram, WhatsApp, YouTube..." required className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
+            <Input name="url" placeholder="https://..." required className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
             <SubmitButton variant="secondary" className="h-12 rounded-full font-black">Adicionar link</SubmitButton>
           </form>
           <div className="mt-5 grid gap-3">
             {[...links, { id: "services", label: "Servicos", url: "Secao interna" }, { id: "faq", label: "Perguntas frequentes", url: "Secao preparada" }].map((link) => (
-              <div key={link.id} draggable className="flex items-center gap-3 rounded-2xl bg-white/[0.04] p-4">
+              <div key={link.id} draggable className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
                 <GripVertical className="h-5 w-5 text-zinc-500" />
                 <div className="min-w-0 flex-1">
                   <p className="font-black">{link.label}</p>
@@ -242,18 +339,22 @@ export function ShowcaseStudio({
       </div>
 
       <aside className="grid gap-5 xl:sticky xl:top-32 xl:self-start">
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl">
+        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-50 shadow-2xl">
           <div className={`min-h-48 bg-gradient-to-br ${selectedTheme.bg} p-4`}>
             {heroImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={heroImageUrl} alt="" className="h-48 w-full rounded-[1.5rem] object-cover" />
             ) : (
-              <div className="flex h-48 items-center justify-center rounded-[1.5rem] border border-white/10 bg-white/10">
+              <div className="flex h-48 items-center justify-center rounded-[1.5rem] border border-slate-200 bg-slate-100">
                 <Store className="h-12 w-12 text-white/50" />
               </div>
             )}
           </div>
-          <div className="p-5">
+          <div className={`p-5 ${selectedTheme.text}`}>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="" className="-mt-14 mb-4 h-20 w-20 rounded-[1.5rem] border-4 border-white object-cover shadow-xl" />
+            ) : null}
             <h3 className="text-3xl font-black">{title}</h3>
             <p className="mt-2 text-sm font-semibold" style={{ color: selectedTheme.accent }}>{subtitle}</p>
             <p className="mt-3 text-sm text-zinc-400">{description}</p>
@@ -261,13 +362,13 @@ export function ShowcaseStudio({
               <a href={publicUrl} target="_blank" rel="noreferrer" className="rounded-full bg-[var(--hp-accent)] px-4 py-3 text-center font-black text-[#04100a]">
                 Agendar
               </a>
-              <a href={whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, "")}` : "#"} className="rounded-full border border-white/10 px-4 py-3 text-center font-black">
+              <a href={whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, "")}` : "#"} className="rounded-full border border-slate-200 px-4 py-3 text-center font-black">
                 WhatsApp
               </a>
             </div>
             <div className="mt-5 grid gap-3">
               {services.slice(0, 3).map((service) => (
-                <div key={service.id} className="rounded-2xl bg-white/[0.05] p-4">
+                <div key={service.id} className="rounded-2xl bg-slate-50 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-black">{service.name}</p>
@@ -290,7 +391,7 @@ export function ShowcaseStudio({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={qrCodeUrl} alt="QR Code da vitrine" className="mx-auto h-40 w-40" />
           </div>
-          <div className="mt-4 rounded-2xl bg-white/[0.05] p-3 text-sm text-zinc-400">
+          <div className="mt-4 rounded-2xl bg-slate-50 p-3 text-sm text-zinc-400">
             <p className="truncate">{publicUrl}</p>
           </div>
           <button
@@ -310,7 +411,7 @@ export function ShowcaseStudio({
           </div>
           <div className="mt-4 grid gap-3">
             {aiSuggestions.map((suggestion) => (
-              <div key={suggestion} className="rounded-2xl bg-black/20 p-3 text-sm text-zinc-300">
+              <div key={suggestion} className="rounded-2xl bg-black/20 p-3 text-sm text-slate-600">
                 <Sparkles className="mb-2 h-4 w-4 text-[var(--hp-accent)]" />
                 {suggestion}
               </div>
@@ -321,25 +422,83 @@ export function ShowcaseStudio({
         <section className="hp-card rounded-[2rem] p-5">
           <h2 className="text-xl font-black">Redes e mídia</h2>
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <a href={instagramUrl || "#"} className="rounded-2xl bg-white/[0.05] p-4 text-center font-bold">
+            <a href={instagramUrl || "#"} className="rounded-2xl bg-slate-50 p-4 text-center font-bold">
               <Instagram className="mx-auto mb-2 h-5 w-5 text-pink-300" />
               Instagram
             </a>
-            <a href={whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, "")}` : "#"} className="rounded-2xl bg-white/[0.05] p-4 text-center font-bold">
+            <a href={whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, "")}` : "#"} className="rounded-2xl bg-slate-50 p-4 text-center font-bold">
               <MessageCircle className="mx-auto mb-2 h-5 w-5 text-[var(--hp-accent)]" />
               WhatsApp
             </a>
-            <div className="rounded-2xl bg-white/[0.05] p-4 text-center font-bold">
+            <a href={youtubeUrl || "#"} className="rounded-2xl bg-slate-50 p-4 text-center font-bold">
               <Play className="mx-auto mb-2 h-5 w-5 text-red-300" />
-              Videos
-            </div>
-            <div className="rounded-2xl bg-white/[0.05] p-4 text-center font-bold">
+              YouTube
+            </a>
+            <a href={phone ? `tel:${phone.replace(/\D/g, "")}` : "#"} className="rounded-2xl bg-slate-50 p-4 text-center font-bold">
               <Phone className="mx-auto mb-2 h-5 w-5 text-sky-300" />
               Ligar
-            </div>
+            </a>
           </div>
         </section>
       </aside>
+    </div>
+  );
+}
+
+function AssetUploadField({
+  id,
+  label,
+  value,
+  onUpload,
+  onUrlChange
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onUpload: (file: File) => void;
+  onUrlChange: (url: string) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+
+  return (
+    <div className="space-y-3 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+      <Label htmlFor={id} className="text-slate-600">{label}</Label>
+      {value ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={value} alt="" className="h-32 w-full rounded-2xl object-cover" />
+      ) : (
+        <div className="flex h-32 items-center justify-center rounded-2xl border border-dashed border-white/15 text-sm text-zinc-500">
+          Nenhuma imagem enviada
+        </div>
+      )}
+      <Input
+        id={id}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        disabled={uploading}
+        onChange={async (event) => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          if (file.size > 5 * 1024 * 1024) {
+            window.alert("Envie uma imagem de ate 5MB.");
+            return;
+          }
+          setUploading(true);
+          try {
+            await onUpload(file);
+          } finally {
+            setUploading(false);
+          }
+        }}
+        className="h-12 rounded-2xl border-slate-200 bg-white text-slate-950"
+      />
+      <Input
+        value={value}
+        onChange={(event) => onUrlChange(event.target.value)}
+        placeholder="Ou cole uma URL de imagem"
+        className="h-12 rounded-2xl border-slate-200 bg-white text-slate-950"
+      />
+      <p className="text-xs text-zinc-500">{uploading ? "Enviando imagem..." : "PNG, JPG, WEBP ou GIF ate 5MB."}</p>
     </div>
   );
 }
