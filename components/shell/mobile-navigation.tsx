@@ -29,7 +29,7 @@ export function MobileNavigation({ items }: { items: MobileNavItem[] }) {
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 mx-auto grid max-w-md grid-cols-5 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] text-[11px] font-bold text-slate-500 shadow-2xl shadow-slate-900/10 backdrop-blur-xl lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 mx-auto grid max-w-md grid-cols-5 border-t border-[var(--hp-line)] bg-[var(--hp-surface)] pb-[env(safe-area-inset-bottom)] text-[11px] font-bold text-slate-500 shadow-2xl shadow-slate-900/10 backdrop-blur-xl lg:hidden">
       {preferred.map((item) => (
         (() => {
           const Icon = icons[item.href as keyof typeof icons] ?? Home;

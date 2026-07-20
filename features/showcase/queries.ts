@@ -27,7 +27,7 @@ export async function getPublicShowcase(slug: string) {
   const supabase = await createClient();
   const { data: organization } = await supabase
     .from("organizations")
-    .select("id,name,slug")
+    .select("id,name,slug,logo_url,cover_url,phone,whatsapp,email,description,address,city,state")
     .eq("slug", slug)
     .eq("status", "ACTIVE")
     .maybeSingle();

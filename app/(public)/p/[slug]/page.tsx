@@ -23,9 +23,24 @@ export default async function PublicShowcasePage({ params }: PublicShowcasePageP
   const { slug } = await params;
   const data = await getPublicShowcase(slug);
 
-  if (!data?.showcase) notFound();
+  if (!data?.organization) notFound();
 
-  const showcase = data.showcase;
+  const showcase = data.showcase ?? {
+    hero_image_url: data.organization.cover_url,
+    logo_url: data.organization.logo_url,
+    title: data.organization.name,
+    subtitle: "Vitrine digital em preparacao",
+    description: data.organization.description || "Esta empresa ja tem uma pagina publica no Hunter Pro. Os servicos, fotos e links serao adicionados em breve.",
+    theme_key: "clean_light",
+    whatsapp: data.organization.whatsapp,
+    instagram_url: null,
+    facebook_url: null,
+    youtube_url: null,
+    phone: data.organization.phone,
+    address_text: [data.organization.address, data.organization.city, data.organization.state]
+      .filter(Boolean)
+      .join(", ")
+  };
   const heroImage = showcase.hero_image_url;
   const themes = {
     clean_light: "bg-slate-50 text-slate-950",
