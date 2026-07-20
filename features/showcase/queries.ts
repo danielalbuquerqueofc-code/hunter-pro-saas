@@ -56,7 +56,7 @@ export async function getPublicShowcase(slug: string) {
         .order("position", { ascending: true }),
       supabase
         .from("services")
-        .select("id,name,description,duration_minutes,price_cents,is_online")
+        .select("id,name,description,image_url,duration_minutes,price_cents,is_online")
         .eq("organization_id", organization.id)
         .eq("is_active", true)
         .order("position", { ascending: true }),

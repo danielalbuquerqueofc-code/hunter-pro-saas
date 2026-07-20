@@ -132,16 +132,20 @@ export default async function PublicShowcasePage({ params }: PublicShowcasePageP
               ) : (
                 data.services.map((service) => (
                   <article key={service.id} className="rounded-[1.5rem] bg-white/[0.05] p-4">
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      {service.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={service.image_url} alt="" className="h-20 w-20 shrink-0 rounded-2xl object-cover" />
+                      ) : null}
                       <div>
                         <h3 className="text-xl font-black">{service.name}</h3>
                         <p className="mt-1 text-sm leading-6 text-zinc-400">{service.description ?? "Servico disponivel para agendamento online."}</p>
+                        <div className="mt-4 flex items-center gap-2 text-sm font-bold text-zinc-500">
+                          <Clock3 className="h-4 w-4" />
+                          {service.duration_minutes} minutos
+                        </div>
                       </div>
-                      <p className="shrink-0 text-lg font-black text-[var(--hp-accent)]">{formatCurrency(service.price_cents)}</p>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-sm font-bold text-zinc-500">
-                      <Clock3 className="h-4 w-4" />
-                      {service.duration_minutes} minutos
+                      <p className="ml-auto shrink-0 text-lg font-black text-[var(--hp-accent)]">{formatCurrency(service.price_cents)}</p>
                     </div>
                   </article>
                 ))

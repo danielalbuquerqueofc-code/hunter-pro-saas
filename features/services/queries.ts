@@ -10,7 +10,7 @@ export async function getServicesData(organizationId: string) {
       .order("position", { ascending: true }),
     supabase
       .from("services")
-      .select("*, category:service_categories(name)")
+      .select("*, category:service_categories(id,name)")
       .eq("organization_id", organizationId)
       .order("position", { ascending: true })
   ]);

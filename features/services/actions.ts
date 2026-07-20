@@ -62,6 +62,7 @@ export async function createServiceAction(formData: FormData) {
     categoryId: formData.get("categoryId"),
     name: formData.get("name"),
     description: formData.get("description"),
+    imageUrl: formData.get("imageUrl"),
     durationMinutes: formData.get("durationMinutes"),
     priceCents: formData.get("priceCents"),
     isOnline: formData.get("isOnline") === "on"
@@ -75,6 +76,7 @@ export async function createServiceAction(formData: FormData) {
     category_id: parsed.data.categoryId || null,
     name: parsed.data.name,
     description: parsed.data.description || null,
+    image_url: parsed.data.imageUrl || null,
     duration_minutes: parsed.data.durationMinutes,
     price_cents: parsed.data.priceCents,
     is_online: parsed.data.isOnline
@@ -130,6 +132,7 @@ export async function createServiceStateAction(
     categoryId: formData.get("categoryId"),
     name: formData.get("name"),
     description: formData.get("description"),
+    imageUrl: formData.get("imageUrl"),
     durationMinutes: formData.get("durationMinutes"),
     priceCents: formData.get("priceCents"),
     isOnline: formData.get("isOnline") === "on"
@@ -145,6 +148,7 @@ export async function createServiceStateAction(
     category_id: parsed.data.categoryId || null,
     name: parsed.data.name,
     description: parsed.data.description || null,
+    image_url: parsed.data.imageUrl || null,
     duration_minutes: parsed.data.durationMinutes,
     price_cents: parsed.data.priceCents,
     is_online: parsed.data.isOnline
@@ -158,4 +162,49 @@ export async function createServiceStateAction(
   revalidatePath("/servicos");
   revalidatePath(`/p/${organization.slug}`);
   return { ok: true, message: "Servico criado com sucesso." };
+}
+
+export async function updateServiceAction(formData: FormData) {
+  const user = await requireUser();
+  const { organization } = await getCurrentOrganization(user.id);
+  if (!organization) throw new Error("Cadastre uma empresa antes de editar servicos.");
+
+  const serviceId = String(formData.get("serviceId") ?? "");
+  if (!serviceId) throw new Error("Servico nao informado.");
+
+  const parsed = serviceSchema.safeParse({
+    categoryId: formData.get("categoryId"),
+    name: formData.get("name"),
+    description: formData.get("description"),
+    imageUrl: formData.get("imageUrl"),
+    durationMinutes: formData.get("durationMinutes"),
+    priceCents: formData.get("priceCents"),
+    isOnline: formData.get("isOnline") === "on"
+  });
+
+  if (!parsed.success) throw new Error(parsed.error.errors[0]?.message ?? "Revise os dados.");
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("services")
+    .update({
+      category_id: parsed.data.categoryId || null,
+      name: parsed.data.name,
+      description: parsed.data.description || null,
+      image_url: parsed.data.imageUrl || null,
+      duration_minutes: parsed.data.durationMinutes,
+      price_cents: parsed.data.priceCents,
+      is_online: parsed.data.isOnline,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", serviceId)
+    .eq("organization_id", organization.id);
+
+  if (error) {
+    console.error("updateServiceAction", error);
+    throw new Error("Nao foi possivel atualizar o servico.");
+  }
+
+  revalidatePath("/servicos");
+  revalidatePath(`/p/${organization.slug}`);
 }
