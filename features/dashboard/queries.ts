@@ -28,7 +28,7 @@ export async function getDashboardData(userId: string) {
 
   const { data: membership } = await supabase
     .from("organization_members")
-    .select("role, organization:organizations(id,name,slug)")
+    .select("role, organization:organizations(id,name,slug,status,subscription_status,access_status,trial_started_at,trial_ends_at,activated_at,blocked_at,blocked_reason)")
     .eq("user_id", userId)
     .eq("status", "ACTIVE")
     .order("created_at", { ascending: true })
@@ -186,6 +186,8 @@ export async function getDashboardData(userId: string) {
       members: members ?? 0,
       activePlan: plan?.name ?? "Free",
       status: subscription?.status ?? "ACTIVE",
+      accessStatus: organization.access_status ?? "active",
+      trialEndsAt: organization.trial_ends_at ?? null,
       publicUrl: `/p/${organization.slug}`
     },
     operations: {

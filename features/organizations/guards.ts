@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { redirectIfOrganizationCannotUseApp } from "@/features/organizations/access-control";
 import { getCurrentOrganization } from "@/features/organizations/current";
 import { requireUser } from "@/lib/auth";
 import type { Role } from "@/lib/constants/roles";
@@ -17,6 +18,8 @@ export async function requireOrganizationAccess(allowedRoles?: Role[]): Promise<
   if (!current.organization || !role) {
     redirect("/configuracoes");
   }
+
+  redirectIfOrganizationCannotUseApp(current.organization);
 
   if (role !== "SUPER_ADMIN" && allowedRoles?.length && !allowedRoles.includes(role)) {
     redirect("/dashboard");

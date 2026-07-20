@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/shell/app-shell";
 import { getDashboardData } from "@/features/dashboard/queries";
+import { redirectIfOrganizationCannotUseApp } from "@/features/organizations/access-control";
 import { requireUser } from "@/lib/auth";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const user = await requireUser();
   const dashboard = await getDashboardData(user.id);
+  redirectIfOrganizationCannotUseApp(dashboard.organization);
 
   return (
     <AppShell

@@ -65,6 +65,39 @@ if (!nav.includes("canUseModule")) {
   failures.push("Menu principal nao usa feature flags de modulo.");
 }
 
+const layout = readFileSync(join(root, "app/(app)/layout.tsx"), "utf8");
+if (!layout.includes("redirectIfOrganizationCannotUseApp")) {
+  failures.push("Layout privado nao bloqueia empresas sem acesso comercial.");
+}
+
+const organizationGuard = readFileSync(join(root, "features/organizations/guards.ts"), "utf8");
+if (!organizationGuard.includes("redirectIfOrganizationCannotUseApp")) {
+  failures.push("Guard de organizacao nao valida trial/bloqueio.");
+}
+
+const accessControl = readFileSync(join(root, "features/organizations/access-control.ts"), "utf8");
+if (!accessControl.includes("trial_expired") || !accessControl.includes("blocked")) {
+  failures.push("Regra central de acesso nao cobre teste expirado e bloqueio.");
+}
+
+const blockedPage = readFileSync(join(root, "app/(public)/acesso-bloqueado/page.tsx"), "utf8");
+if (!blockedPage.includes("signOutAction") || !blockedPage.includes("/precos")) {
+  failures.push("Tela de acesso bloqueado nao oferece saida e caminho de plano.");
+}
+
+const adminPage = readFileSync(join(root, "app/admin/page.tsx"), "utf8");
+if (!adminPage.includes("updateOrganizationAccessAction")) {
+  failures.push("Admin global nao possui acoes de controle de acesso.");
+}
+
+const accessMigration = readFileSync(
+  join(root, "supabase/migrations/0009_access_trial_admin_controls.sql"),
+  "utf8"
+);
+if (!accessMigration.includes("trial_ends_at") || !accessMigration.includes("expire_organization_trials")) {
+  failures.push("Migration 0009 nao prepara trial de 5 dias e expiracao.");
+}
+
 if (failures.length > 0) {
   console.error("Falhas de auditoria de seguranca:");
   for (const failure of failures) {

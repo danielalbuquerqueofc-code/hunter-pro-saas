@@ -140,6 +140,30 @@ Ainda nao implementado nesta fase:
 - Automacoes reais.
 - Integracoes externas.
 
+## Controle de acesso comercial
+
+Implementado:
+
+1. Empresas novas entram com teste gratis de 5 dias.
+2. Empresas existentes foram preservadas como ativas para nao bloquear clientes atuais.
+3. O painel privado verifica no servidor se a empresa pode usar o sistema.
+4. Quando o teste expira, a empresa e enviada para `/acesso-bloqueado`.
+5. O superadministrador possui painel em `/admin` para ativar, bloquear, liberar, estender teste por mais 5 dias, encerrar teste ou cancelar empresa.
+6. Acoes administrativas geram registros em `audit_logs` e notificacoes internas.
+
+Regras atuais:
+
+- `trial`: usa o sistema ate `trial_ends_at`.
+- `active`: usa normalmente.
+- `trial_expired`: nao acessa o painel.
+- `blocked`: nao acessa o painel.
+- `suspended`: nao acessa o painel.
+- `cancelled`: nao acessa o painel.
+
+Migration relacionada:
+
+- `0009_access_trial_admin_controls.sql`
+
 ## Modelo inicial do banco
 
 Tabelas da fase 1:
@@ -164,6 +188,17 @@ Tabelas e complementos da fase 7:
 - `organization_settings`
 - campos publicos adicionais em `organizations`
 - campos auxiliares em `notifications` e `audit_logs`
+
+Complementos de acesso comercial:
+
+- `organizations.access_status`
+- `organizations.trial_started_at`
+- `organizations.trial_ends_at`
+- `organizations.activated_at`
+- `organizations.blocked_at`
+- `organizations.blocked_by`
+- `organizations.blocked_reason`
+- `organizations.admin_notes`
 
 ## Variaveis de ambiente
 

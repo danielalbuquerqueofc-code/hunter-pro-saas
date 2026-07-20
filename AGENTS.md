@@ -13,6 +13,8 @@ Hunter Pro e uma plataforma SaaS multiempresa. Toda decisao tecnica deve preserv
 - Nunca confiar em `organization_id` enviado livremente pelo frontend.
 - A organizacao ativa deve ser validada no servidor pelo usuario autenticado e por `organization_members`.
 - Um usuario pode futuramente participar de mais de uma organizacao.
+- Empresas tambem devem passar pela validacao comercial central em `features/organizations/access-control.ts`.
+- Empresas em `trial_expired`, `blocked`, `suspended` ou `cancelled` nao podem acessar o painel privado.
 
 ## Permissoes
 
@@ -50,6 +52,7 @@ Permissoes devem ser verificadas por organizacao.
 - RLS deve ser criada junto das tabelas.
 - Criar indices para `organization_id`, datas, status e chaves usadas em filtros.
 - Criar audit logs para acoes administrativas importantes.
+- Controle de teste gratis, bloqueio e ativacao deve usar migration nova e defensiva.
 - Nao criar tabelas duplicadas.
 - Nao alterar migrations antigas em producao.
 - Novas mudancas de banco devem usar novas migrations.
@@ -74,6 +77,7 @@ Permissoes devem ser verificadas por organizacao.
 - Validar entrada de formularios com Zod.
 - Toda funcionalidade deve respeitar permissoes.
 - Executar lint, typecheck e build antes de concluir entregas relevantes.
+- Alteracoes em trial, bloqueio, cancelamento e ativacao devem gerar `audit_logs`.
 
 ## Fases
 
