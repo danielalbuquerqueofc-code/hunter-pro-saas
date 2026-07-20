@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Bell, Sparkles } from "lucide-react";
+import { CalendarPlus } from "lucide-react";
 import { AppSidebar } from "@/components/shell/app-sidebar";
 import { MobileNavigation } from "@/components/shell/mobile-navigation";
 import { canSeeNavItem, shellNavItems } from "@/components/shell/navigation";
@@ -26,30 +26,23 @@ export function AppShell({
   const publicHref = organizationSlug ? `/p/${organizationSlug}` : "/vitrine";
 
   return (
-    <div className="min-h-screen bg-[#eef1f7] text-zinc-950 dark:bg-zinc-950 dark:text-white">
-      <header className="sticky top-0 z-30 border-b border-red-900/20 bg-brand-orange text-white shadow-sm">
+    <div className="min-h-screen bg-[var(--hp-bg)] text-white">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#070b0f]/90 text-white shadow-2xl shadow-black/20 backdrop-blur-xl">
         <Topbar email={email} organizationName={organizationName} publicHref={publicHref} />
         <AppSidebar items={visibleNav} />
       </header>
 
-      <main className="min-w-0 pb-24 lg:pb-8">{children}</main>
+      <main className="min-w-0 pb-28 lg:pb-8">{children}</main>
 
       <MobileNavigation items={visibleNav} />
 
-      <div className="fixed bottom-20 right-5 z-40 flex flex-col gap-3 lg:bottom-6">
+      <div className="fixed bottom-24 right-5 z-40 lg:bottom-8">
         <Link
-          href="/atendimento"
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-sky-500 text-white shadow-xl shadow-sky-500/30"
-          aria-label="Atendimento rapido"
+          href="/agenda"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--hp-accent)] text-[#04100a] shadow-2xl shadow-emerald-500/30 transition hover:scale-105"
+          aria-label="Novo agendamento"
         >
-          <Bell className="h-6 w-6" />
-        </Link>
-        <Link
-          href="/ia-sdr"
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-violet-600 text-white shadow-xl shadow-violet-600/30"
-          aria-label="IA SDR"
-        >
-          <Sparkles className="h-6 w-6" />
+          <CalendarPlus className="h-7 w-7" />
         </Link>
       </div>
 

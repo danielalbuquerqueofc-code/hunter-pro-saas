@@ -1,64 +1,41 @@
-import Link from "next/link";
-import { AppHeader } from "@/components/layout/app-header";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShowcaseLinkForm, ShowcaseMainForm } from "@/features/showcase/showcase-forms";
-import { getShowcaseByOrganization } from "@/features/showcase/queries";
+import { ShowcaseStudio } from "@/components/showcase/showcase-studio";
+import { getAgendaData } from "@/features/appointments/queries";
 import { requireOrganizationAccess } from "@/features/organizations/guards";
+import { getServicesData } from "@/features/services/queries";
+import { getShowcaseByOrganization } from "@/features/showcase/queries";
 
 export default async function VitrinePage() {
   const { organization } = await requireOrganizationAccess(["OWNER", "ADMIN", "MANAGER"]);
-
-  const { showcase, links } = await getShowcaseByOrganization(organization.id);
+  const [{ showcase, links }, { services }, { appointments }] = await Promise.all([
+    getShowcaseByOrganization(organization.id),
+    getServicesData(organization.id),
+    getAgendaData(organization.id)
+  ]);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://hunter-pro-saas.vercel.app";
+  const publicUrl = `${appUrl.replace(/\/$/, "")}/p/${organization.slug}`;
 
   return (
-    <>
-      <AppHeader title="Vitrine publica" eyebrow={organization.name} />
-      <section className="grid gap-6 p-4 sm:p-6 lg:p-8 xl:grid-cols-[1fr_380px]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Conteudo principal</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ShowcaseMainForm showcase={showcase} organizationName={organization.name} />
-          </CardContent>
-        </Card>
+    <section className="mx-auto grid max-w-7xl gap-5 px-4 py-5 sm:px-6 lg:px-8">
+      <div>
+        <p className="text-sm font-black uppercase tracking-wide text-[var(--hp-accent)]">{organization.name}</p>
+        <h1 className="mt-1 text-4xl font-black tracking-tight">Vitrine digital</h1>
+        <p className="mt-2 max-w-2xl text-zinc-400">
+          Edite sua pagina publica, organize links, destaque servicos e compartilhe um QR Code para receber agendamentos.
+        </p>
+      </div>
 
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pagina publica</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4 text-sm text-zinc-600">Quando publicada, a pagina fica acessivel pelo slug.</p>
-              <Button asChild variant="outline" className="w-full">
-                <Link href={`/p/${organization.slug}`}>Abrir /p/{organization.slug}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Links rapidos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ShowcaseLinkForm />
-              <div className="mt-5 grid gap-2">
-                {links.length === 0 ? (
-                  <p className="text-sm text-zinc-500">Nenhum link cadastrado.</p>
-                ) : (
-                  links.map((link) => (
-                    <div key={link.id} className="rounded-lg border border-zinc-200 p-3 text-sm">
-                      <strong>{link.label}</strong>
-                      <p className="truncate text-zinc-500">{link.url}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-    </>
+      <ShowcaseStudio
+        organizationName={organization.name}
+        publicUrl={publicUrl}
+        showcase={showcase}
+        links={links}
+        services={services}
+        analytics={{
+          views: null,
+          clicks: null,
+          appointments: appointments.length
+        }}
+      />
+    </section>
   );
 }

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
+import { CalendarDays, Clock3, Instagram, MapPin, MessageCircle, Share2, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { requestAppointmentAction } from "@/features/appointments/actions";
@@ -10,67 +10,130 @@ type PublicShowcasePageProps = {
   params: Promise<{ slug: string }>;
 };
 
+function formatCurrency(cents: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
+}
+
+function whatsappUrl(value: string | null | undefined) {
+  const digits = (value ?? "").replace(/\D/g, "");
+  return digits ? `https://wa.me/${digits.startsWith("55") ? digits : `55${digits}`}` : "#";
+}
+
 export default async function PublicShowcasePage({ params }: PublicShowcasePageProps) {
   const { slug } = await params;
   const data = await getPublicShowcase(slug);
 
   if (!data?.showcase) notFound();
 
+  const showcase = data.showcase;
+  const heroImage = showcase.hero_image_url;
+
   return (
-    <main className="min-h-screen bg-brand-ink text-white">
-      <section className="mx-auto grid max-w-7xl gap-8 px-6 py-10 lg:grid-cols-[1fr_420px]">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-wide text-brand-orange">Agenda online</p>
-          <h1 className="mt-4 max-w-3xl text-5xl font-black leading-tight">
-            {data.showcase.title}
-          </h1>
-          {data.showcase.subtitle ? (
-            <p className="mt-4 max-w-2xl text-xl text-zinc-300">{data.showcase.subtitle}</p>
-          ) : null}
-          {data.showcase.description ? (
-            <p className="mt-6 max-w-3xl leading-8 text-zinc-300">{data.showcase.description}</p>
-          ) : null}
+    <main className="min-h-screen bg-[#070b0f] text-white">
+      <section className="mx-auto grid max-w-6xl gap-5 px-4 py-4 sm:px-6 lg:grid-cols-[1fr_420px] lg:py-8">
+        <div className="grid gap-5">
+          <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl">
+            <div className="relative min-h-72 bg-gradient-to-br from-emerald-500/20 via-slate-900 to-slate-950">
+              {heroImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-85" />
+              ) : null}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#070b0f] via-[#070b0f]/20 to-transparent" />
+              <div className="relative flex min-h-72 flex-col justify-end p-5 sm:p-8">
+                <div className="mb-4 flex w-fit items-center gap-2 rounded-full bg-black/40 px-3 py-2 text-sm font-bold backdrop-blur">
+                  <Star className="h-4 w-4 fill-amber-300 text-amber-300" />
+                  4,9 · Atendimento verificado
+                </div>
+                <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">{showcase.title}</h1>
+                {showcase.subtitle ? <p className="mt-3 max-w-2xl text-lg text-zinc-200">{showcase.subtitle}</p> : null}
+              </div>
+            </div>
+            <div className="grid gap-4 p-5 sm:p-8">
+              {showcase.description ? <p className="text-lg leading-8 text-zinc-300">{showcase.description}</p> : null}
+              <div className="flex flex-wrap gap-3">
+                <a href="#agendar" className="rounded-full bg-[var(--hp-accent)] px-6 py-4 font-black text-[#04100a]">
+                  Agendar agora
+                </a>
+                <a href={whatsappUrl(showcase.whatsapp)} className="rounded-full border border-white/10 px-6 py-4 font-black text-white">
+                  <MessageCircle className="mr-2 inline h-5 w-5" />
+                  WhatsApp
+                </a>
+                {showcase.instagram_url ? (
+                  <a href={showcase.instagram_url} target="_blank" rel="noreferrer" className="rounded-full border border-white/10 px-6 py-4 font-black text-white">
+                    <Instagram className="mr-2 inline h-5 w-5" />
+                    Instagram
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          </div>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            {data.links.map((link) => (
-              <Button key={link.id} asChild variant="secondary">
-                <a href={link.url} target="_blank" rel="noreferrer">{link.label}</a>
-              </Button>
+          <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-black uppercase tracking-wide text-[var(--hp-accent)]">Servicos</p>
+                <h2 className="text-3xl font-black">Escolha o que precisa</h2>
+              </div>
+              <Sparkles className="h-7 w-7 text-zinc-500" />
+            </div>
+            <div className="mt-5 grid gap-3">
+              {data.services.length === 0 ? (
+                <div className="rounded-[1.5rem] border border-dashed border-white/10 p-6 text-zinc-400">
+                  Servicos em configuracao.
+                </div>
+              ) : (
+                data.services.map((service) => (
+                  <article key={service.id} className="rounded-[1.5rem] bg-white/[0.05] p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-xl font-black">{service.name}</h3>
+                        <p className="mt-1 text-sm leading-6 text-zinc-400">{service.description ?? "Servico disponivel para agendamento online."}</p>
+                      </div>
+                      <p className="shrink-0 text-lg font-black text-[var(--hp-accent)]">{formatCurrency(service.price_cents)}</p>
+                    </div>
+                    <div className="mt-4 flex items-center gap-2 text-sm font-bold text-zinc-500">
+                      <Clock3 className="h-4 w-4" />
+                      {service.duration_minutes} minutos
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="grid gap-3 sm:grid-cols-3">
+            {[
+              ["Agenda online", "Escolha dia e horario sem troca infinita de mensagens."],
+              ["Atendimento simples", "Seu pedido chega direto para a equipe."],
+              ["Link compartilhavel", "Envie a vitrine para amigos e contatos."]
+            ].map(([title, description]) => (
+              <div key={title} className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5">
+                <Share2 className="h-6 w-6 text-[var(--hp-accent)]" />
+                <h3 className="mt-4 text-lg font-black">{title}</h3>
+                <p className="mt-2 text-sm text-zinc-500">{description}</p>
+              </div>
             ))}
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-2">
-            {data.services.length === 0 ? (
-              <Card className="border-white/10 bg-white/5 text-white">
-                <CardContent className="p-6 text-zinc-300">Servicos em configuracao.</CardContent>
-              </Card>
-            ) : (
-              data.services.map((service) => (
-                <Card key={service.id} className="border-white/10 bg-white/5 text-white">
-                  <CardContent className="p-6">
-                    <h2 className="text-xl font-bold">{service.name}</h2>
-                    <p className="mt-2 text-sm text-zinc-300">{service.description}</p>
-                    <p className="mt-5 text-sm font-bold text-brand-orange">
-                      {service.duration_minutes} min - R$ {(service.price_cents / 100).toFixed(2)}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+          </section>
         </div>
 
-        <Card className="h-fit border-white/10 bg-white text-zinc-950">
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-black">Solicitar agendamento</h2>
-            <p className="mt-2 text-sm text-zinc-600">
-              Preencha os dados e a equipe recebe sua solicitacao no painel.
-            </p>
-            <form action={requestAppointmentAction} className="mt-6 grid gap-4">
+        <aside id="agendar" className="lg:sticky lg:top-6 lg:self-start">
+          <div className="rounded-[2rem] border border-white/10 bg-white text-zinc-950 shadow-2xl">
+            <div className="border-b border-zinc-100 p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                  <CalendarDays className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black">Agendar</h2>
+                  <p className="text-sm text-zinc-500">Solicite seu horario em poucos passos.</p>
+                </div>
+              </div>
+            </div>
+            <form action={requestAppointmentAction} className="grid gap-4 p-5">
               <input type="hidden" name="organizationId" value={data.organization.id} />
               <div className="space-y-2">
                 <Label htmlFor="serviceId">Servico</Label>
-                <select id="serviceId" name="serviceId" className="h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-950">
+                <select id="serviceId" name="serviceId" className="h-12 w-full rounded-2xl border border-zinc-200 bg-white px-3 text-sm text-zinc-950">
                   <option value="">Escolha um servico</option>
                   {data.services.map((service) => (
                     <option key={service.id} value={service.id}>{service.name}</option>
@@ -79,7 +142,7 @@ export default async function PublicShowcasePage({ params }: PublicShowcasePageP
               </div>
               <div className="space-y-2">
                 <Label htmlFor="professionalId">Profissional</Label>
-                <select id="professionalId" name="professionalId" className="h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-950">
+                <select id="professionalId" name="professionalId" className="h-12 w-full rounded-2xl border border-zinc-200 bg-white px-3 text-sm text-zinc-950">
                   <option value="">Qualquer profissional</option>
                   {data.professionals.map((professional) => (
                     <option key={professional.id} value={professional.id}>{professional.name}</option>
@@ -89,25 +152,34 @@ export default async function PublicShowcasePage({ params }: PublicShowcasePageP
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="date">Data</Label>
-                  <Input id="date" name="date" type="date" required />
+                  <Input id="date" name="date" type="date" required className="h-12 rounded-2xl" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="time">Horario</Label>
-                  <Input id="time" name="time" type="time" required />
+                  <Input id="time" name="time" type="time" required className="h-12 rounded-2xl" />
                 </div>
               </div>
-              <Input name="customerName" placeholder="Seu nome" required />
-              <Input name="customerPhone" placeholder="WhatsApp" required />
-              <Input name="customerEmail" type="email" placeholder="E-mail" />
+              <Input name="customerName" placeholder="Seu nome" required className="h-12 rounded-2xl" />
+              <Input name="customerPhone" placeholder="WhatsApp" required className="h-12 rounded-2xl" />
+              <Input name="customerEmail" type="email" placeholder="E-mail" className="h-12 rounded-2xl" />
               <textarea
                 name="notes"
                 placeholder="Conte rapidamente o que voce precisa"
-                className="min-h-24 rounded-lg border border-zinc-200 p-3 text-sm"
+                className="min-h-24 rounded-2xl border border-zinc-200 p-3 text-sm"
               />
-              <Button type="submit">Enviar solicitacao</Button>
+              <Button type="submit" className="h-14 rounded-full bg-[var(--hp-accent)] text-base font-black text-[#04100a] hover:bg-emerald-400">
+                Enviar solicitacao
+              </Button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+
+          <div className="mt-4 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5">
+            <div className="flex items-center gap-2 text-sm font-bold text-zinc-400">
+              <MapPin className="h-4 w-4 text-[var(--hp-accent)]" />
+              Atendimento local ou online conforme disponibilidade.
+            </div>
+          </div>
+        </aside>
       </section>
     </main>
   );

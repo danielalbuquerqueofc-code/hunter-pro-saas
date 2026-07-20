@@ -24,7 +24,7 @@ export const appModules = [
   { href: "/configuracoes", label: "Configuracoes", roles: ["OWNER", "ADMIN"], status: "active" },
   { href: "/leads", label: "Leads", roles: ["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT"], status: "disabled" },
   { href: "/pipeline", label: "Pipeline", roles: ["OWNER", "ADMIN", "MANAGER", "SALES"], status: "disabled" },
-  { href: "/clientes", label: "Clientes", roles: ["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT"], status: "disabled" },
+  { href: "/clientes", label: "Clientes", roles: ["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT"], status: "active" },
   { href: "/conversas", label: "Conversas", roles: ["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT"], status: "disabled" },
   { href: "/orcamentos", label: "Orcamentos", roles: ["OWNER", "ADMIN", "MANAGER", "SALES"], status: "disabled" },
   { href: "/vendas", label: "Vendas", roles: ["OWNER", "ADMIN", "MANAGER", "SALES", "FINANCIAL"], status: "disabled" },

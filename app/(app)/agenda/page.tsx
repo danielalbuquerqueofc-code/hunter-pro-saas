@@ -1,4 +1,13 @@
-import { AppHeader } from "@/components/layout/app-header";
+import {
+  CalendarCheck,
+  CheckCircle2,
+  Clock3,
+  GripVertical,
+  MoveRight,
+  Plus,
+  RotateCcw,
+  XCircle
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,95 +17,208 @@ import { ProfessionalsPanel } from "@/features/appointments/professionals-panel"
 import { getAgendaData } from "@/features/appointments/queries";
 import { requireOrganizationAccess } from "@/features/organizations/guards";
 
-const weekdays = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"];
+const weekdays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
+const fullWeekdays = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"];
+const hours = ["08:00", "09:00", "10:30", "12:00", "14:00", "15:30", "17:00", "19:00"];
+
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(date);
+}
+
+function formatTime(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+}
+
+function getWeekDays() {
+  const today = new Date();
+  const current = today.getDay();
+  return weekdays.map((label, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() + index - current);
+    return {
+      label,
+      number: date.getDate(),
+      active: index === current
+    };
+  });
+}
 
 export default async function AgendaPage() {
   const { organization } = await requireOrganizationAccess(["OWNER", "ADMIN", "MANAGER", "ATTENDANT", "PROFESSIONAL"]);
-
   const { professionals, rules, appointments } = await getAgendaData(organization.id);
+  const weekDays = getWeekDays();
+  const upcoming = appointments.slice(0, 8);
 
   return (
-    <>
-      <AppHeader title="Agenda" eyebrow={organization.name} />
-      <section className="grid gap-6 p-4 sm:p-6 lg:p-8 xl:grid-cols-[460px_1fr]">
-        <div className="grid gap-6">
-          <ProfessionalsPanel professionals={professionals} />
-
-          <Card>
-            <CardHeader><CardTitle>Disponibilidade</CardTitle></CardHeader>
-            <CardContent>
-              <form action={createAvailabilityRuleAction} className="grid gap-3">
-                <Select name="professionalId">
-                  <option value="">Todos os profissionais</option>
-                  {professionals.map((professional) => (
-                    <option key={professional.id} value={professional.id}>{professional.name}</option>
-                  ))}
-                </Select>
-                <Select name="weekday">
-                  {weekdays.map((weekday, index) => (
-                    <option key={weekday} value={index}>{weekday}</option>
-                  ))}
-                </Select>
-                <div className="grid grid-cols-2 gap-3">
-                  <Input name="startTime" type="time" defaultValue="09:00" required />
-                  <Input name="endTime" type="time" defaultValue="18:00" required />
-                </div>
-                <Button type="submit">Adicionar horario</Button>
-              </form>
-            </CardContent>
-          </Card>
+    <section className="mx-auto grid max-w-7xl gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[1fr_380px] lg:px-8">
+      <div className="grid gap-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wide text-[var(--hp-accent)]">{organization.name}</p>
+            <h1 className="mt-1 text-4xl font-black tracking-tight">Agenda</h1>
+            <p className="mt-2 text-zinc-400">Organize o dia com poucos toques.</p>
+          </div>
+          <Button className="h-12 rounded-full bg-[var(--hp-accent)] px-5 font-black text-[#04100a] hover:bg-emerald-400">
+            <Plus className="mr-2 h-5 w-5" />
+            Novo
+          </Button>
         </div>
 
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader><CardTitle>Solicitacoes de agendamento</CardTitle></CardHeader>
-            <CardContent className="grid gap-3">
-              {appointments.length === 0 ? (
-                <p className="text-sm text-zinc-500">Nenhum agendamento recebido ainda.</p>
-              ) : (
-                appointments.map((appointment) => {
-                  const service = Array.isArray(appointment.service) ? appointment.service[0] : appointment.service;
-                  const professional = Array.isArray(appointment.professional) ? appointment.professional[0] : appointment.professional;
-                  return (
-                    <div key={appointment.id} className="rounded-lg border border-zinc-200 p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h2 className="font-bold">{appointment.customer_name}</h2>
-                          <p className="text-sm text-zinc-500">{service?.name ?? "Servico nao informado"}</p>
+        <div className="hp-card rounded-[2rem] p-4">
+          <div className="grid grid-cols-7 gap-2">
+            {weekDays.map((day) => (
+              <button
+                key={day.label}
+                type="button"
+                className={`rounded-2xl px-2 py-3 text-center transition ${
+                  day.active ? "bg-[var(--hp-accent)] text-[#04100a]" : "bg-white/[0.04] text-zinc-400"
+                }`}
+              >
+                <span className="block text-xs font-bold">{day.label}</span>
+                <span className="mt-1 block text-lg font-black">{day.number}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="hp-card rounded-[2rem] p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-black uppercase tracking-wide text-[var(--hp-accent)]">Hoje</p>
+              <h2 className="text-2xl font-black">{formatDate(new Date())}</h2>
+            </div>
+            <div className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-zinc-300">
+              {upcoming.length} horarios
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4">
+            {hours.map((hour, index) => {
+              const appointment = upcoming[index];
+              const service = appointment
+                ? Array.isArray(appointment.service)
+                  ? appointment.service[0]
+                  : appointment.service
+                : null;
+              const professional = appointment
+                ? Array.isArray(appointment.professional)
+                  ? appointment.professional[0]
+                  : appointment.professional
+                : null;
+
+              return (
+                <div key={hour} className="grid grid-cols-[58px_1fr] gap-3">
+                  <div className="pt-4 text-sm font-bold text-zinc-500">{appointment ? formatTime(appointment.starts_at) : hour}</div>
+                  {appointment ? (
+                    <article
+                      draggable
+                      className="rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-4 transition hover:border-emerald-400/40 hover:bg-white/[0.08]"
+                    >
+                      <div className="flex items-start gap-3">
+                        <GripVertical className="mt-1 h-5 w-5 shrink-0 text-zinc-500" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <h3 className="truncate text-lg font-black">{appointment.customer_name}</h3>
+                              <p className="text-sm text-zinc-400">{service?.name ?? "Servico nao informado"}</p>
+                            </div>
+                            <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-black text-[var(--hp-accent)]">
+                              {appointment.status}
+                            </span>
+                          </div>
+                          <p className="mt-3 text-sm text-zinc-500">{professional?.name ?? "Sem profissional"} · {appointment.customer_phone}</p>
+                          <div className="mt-4 grid grid-cols-3 gap-2">
+                            <button type="button" className="rounded-full bg-emerald-400/10 px-3 py-2 text-xs font-black text-[var(--hp-accent)]">
+                              <CheckCircle2 className="mx-auto mb-1 h-4 w-4" />
+                              Confirmar
+                            </button>
+                            <button type="button" className="rounded-full bg-white/10 px-3 py-2 text-xs font-black text-zinc-300">
+                              <RotateCcw className="mx-auto mb-1 h-4 w-4" />
+                              Remarcar
+                            </button>
+                            <button type="button" className="rounded-full bg-red-500/10 px-3 py-2 text-xs font-black text-red-300">
+                              <XCircle className="mx-auto mb-1 h-4 w-4" />
+                              Cancelar
+                            </button>
+                          </div>
                         </div>
-                        <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-brand-orange">{appointment.status}</span>
                       </div>
-                      <p className="mt-3 text-sm text-zinc-600">
-                        {new Date(appointment.starts_at).toLocaleString("pt-BR")} - {professional?.name ?? "sem profissional"}
-                      </p>
-                      <p className="mt-1 text-sm text-zinc-500">{appointment.customer_phone}</p>
+                    </article>
+                  ) : (
+                    <div className="rounded-[1.5rem] border border-dashed border-white/10 p-4 text-sm text-zinc-500">
+                      Arraste um atendimento para este horario ou toque em Novo.
                     </div>
-                  );
-                })
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>Regras cadastradas</CardTitle></CardHeader>
-            <CardContent className="grid gap-2">
-              {rules.length === 0 ? (
-                <p className="text-sm text-zinc-500">Nenhuma regra de horario cadastrada.</p>
-              ) : (
-                rules.map((rule) => {
-                  const professional = Array.isArray(rule.professional) ? rule.professional[0] : rule.professional;
-                  return (
-                    <div key={rule.id} className="rounded-lg border border-zinc-200 p-3 text-sm">
-                      <strong>{weekdays[rule.weekday]}</strong> {rule.start_time} as {rule.end_time}
-                      <p className="text-zinc-500">{professional?.name ?? "Todos os profissionais"}</p>
-                    </div>
-                  );
-                })
-              )}
-            </CardContent>
-          </Card>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </section>
-    </>
+      </div>
+
+      <aside className="grid gap-5 lg:content-start">
+        <Card className="hp-card rounded-[2rem] border-white/10 bg-transparent text-white">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Clock3 className="h-5 w-5 text-[var(--hp-accent)]" />
+              Disponibilidade
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form action={createAvailabilityRuleAction} className="grid gap-3">
+              <Select name="professionalId" className="h-12 rounded-2xl border-white/10 bg-white/10 text-white">
+                <option value="">Todos os profissionais</option>
+                {professionals.map((professional) => (
+                  <option key={professional.id} value={professional.id}>{professional.name}</option>
+                ))}
+              </Select>
+              <Select name="weekday" className="h-12 rounded-2xl border-white/10 bg-white/10 text-white">
+                {fullWeekdays.map((weekday, index) => (
+                  <option key={weekday} value={index}>{weekday}</option>
+                ))}
+              </Select>
+              <div className="grid grid-cols-2 gap-3">
+                <Input name="startTime" type="time" defaultValue="09:00" required className="h-12 rounded-2xl border-white/10 bg-white/10 text-white" />
+                <Input name="endTime" type="time" defaultValue="18:00" required className="h-12 rounded-2xl border-white/10 bg-white/10 text-white" />
+              </div>
+              <Button type="submit" className="h-12 rounded-full bg-white text-[#04100a] font-black hover:bg-zinc-100">
+                Salvar horario
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <ProfessionalsPanel professionals={professionals} />
+
+        <Card className="hp-card rounded-[2rem] border-white/10 bg-transparent text-white">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <CalendarCheck className="h-5 w-5 text-[var(--hp-accent)]" />
+              Regras ativas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            {rules.length === 0 ? (
+              <p className="text-sm text-zinc-400">Nenhuma regra cadastrada.</p>
+            ) : (
+              rules.slice(0, 5).map((rule) => {
+                const professional = Array.isArray(rule.professional) ? rule.professional[0] : rule.professional;
+                return (
+                  <div key={rule.id} className="flex items-center justify-between rounded-2xl bg-white/[0.04] p-3 text-sm">
+                    <div>
+                      <strong>{fullWeekdays[rule.weekday]}</strong>
+                      <p className="text-zinc-500">{professional?.name ?? "Todos"}</p>
+                    </div>
+                    <span className="flex items-center gap-1 text-zinc-300">
+                      {rule.start_time} <MoveRight className="h-3 w-3" /> {rule.end_time}
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </CardContent>
+        </Card>
+      </aside>
+    </section>
   );
 }

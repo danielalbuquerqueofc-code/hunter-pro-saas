@@ -1,52 +1,39 @@
 import Link from "next/link";
 import {
-  Banknote,
-  Building2,
   CalendarDays,
   CircleDollarSign,
-  Goal,
-  TrendingUp,
-  Users,
+  Clock3,
+  MessageCircle,
+  Plus,
+  Share2,
+  Sparkles,
+  Store,
+  UserPlus,
   WalletCards
 } from "lucide-react";
-import { ActivityFeed } from "@/components/dashboard/activity-feed";
-import { AiAlerts } from "@/components/dashboard/ai-alerts";
-import { DashboardCalendar } from "@/components/dashboard/dashboard-calendar";
-import { FinancialSummary } from "@/components/dashboard/financial-summary";
-import { MetricCard } from "@/components/dashboard/metric-card";
 import { OnboardingModal } from "@/components/dashboard/onboarding-modal";
-import { PipelineSummary } from "@/components/dashboard/pipeline-summary";
-import { SalesSummary } from "@/components/dashboard/sales-summary";
-import { SetupChecklist } from "@/components/dashboard/setup-checklist";
-import { TaskList } from "@/components/dashboard/task-list";
-import { TodayAppointments } from "@/components/dashboard/today-appointments";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { getDashboardData } from "@/features/dashboard/queries";
-import { getOnboardingProgress, getSetupChecklist } from "@/features/onboarding/queries";
+import { getOnboardingProgress } from "@/features/onboarding/queries";
 import { requireUser } from "@/lib/auth";
-
-type MetricTrend = "positive" | "negative" | "neutral";
 
 function formatCurrency(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 }
 
-function getGreeting() {
-  const hour = new Date().getHours();
-
-  if (hour < 12) {
-    return "bom dia";
-  }
-
-  if (hour < 18) {
-    return "boa tarde";
-  }
-
-  return "boa noite";
+function formatTime(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 
-function getFormattedDate() {
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Bom dia";
+  if (hour < 18) return "Boa tarde";
+  return "Boa noite";
+}
+
+function getDateLabel() {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "long",
@@ -60,11 +47,11 @@ export default async function DashboardPage() {
 
   if (!dashboard.organization) {
     return (
-      <section className="mx-auto max-w-3xl p-8">
+      <section className="mx-auto max-w-3xl px-5 py-10">
         <EmptyState
-          icon={Building2}
+          icon={Store}
           title="Crie sua primeira empresa"
-          description="Para ativar o painel, cadastre a empresa que sera dona dos dados, usuarios, agenda, CRM, financeiro e vitrine."
+          description="Ative seu espaco para gerenciar agenda, clientes, financeiro e vitrine digital."
           action={
             <Button asChild>
               <Link href="/configuracoes">Cadastrar empresa</Link>
@@ -75,172 +62,163 @@ export default async function DashboardPage() {
     );
   }
 
-  const name = user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "admin";
   const operations = dashboard.operations;
-  const [onboardingProgress, setupItems] = await Promise.all([
-    getOnboardingProgress(dashboard.organization.id, user.id),
-    getSetupChecklist(dashboard.organization.id)
-  ]);
+  const name = user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "admin";
+  const onboardingProgress = await getOnboardingProgress(dashboard.organization.id, user.id);
+  const upcoming = operations?.upcomingAppointments.slice(0, 3) ?? [];
+  const today = operations?.appointmentsToday ?? [];
+  const pendingReceivable = operations?.financial.pendingReceivable ?? 0;
+  const balance = operations?.financial.balance ?? 0;
+  const pendingTasks = operations?.tasks.filter((task) => task.status !== "DONE").slice(0, 3) ?? [];
+  const publicUrl = `/p/${dashboard.organization.slug}`;
   const quickActions = [
-    { href: "/crm", label: "Novo contato", icon: Users },
-    { href: "/agenda", label: "Novo horario", icon: CalendarDays },
-    { href: "/servicos", label: "Novo servico", icon: Goal },
-    { href: "/financeiro", label: "Nova transacao", icon: WalletCards }
-  ];
-  const paidByMethod = Object.entries(operations?.paidByMethod ?? {}).map(([label, value], index) => ({
-    label,
-    value,
-    color: ["#38bdf8", "#22c55e", "#f59e0b", "#ef4444", "#94a3b8", "#111827"][index % 6]
-  }));
-  const appointmentDays = Array.from(
-    new Set((operations?.upcomingAppointments ?? []).map((appointment) => new Date(appointment.starts_at).getDate()))
-  );
-  const aiAlerts =
-    operations?.aiAgents.length
-      ? ["IA SDR configurada. Monitore execucoes antes de liberar automacoes externas."]
-      : ["IA SDR ainda sem agente ativo. Configure em IA antes de automatizar atendimento."];
-  const balanceTrend: MetricTrend = (operations?.financial.balance ?? 0) >= 0 ? "positive" : "negative";
-  const overdueTrend: MetricTrend = operations?.overdueTasks ? "negative" : "positive";
-  const dashboardMetrics = [
-    {
-      title: "Recebido",
-      value: formatCurrency(operations?.financial.paidIncome ?? 0),
-      comparison: "receitas pagas registradas",
-      trend: "neutral" as const,
-      href: "/financeiro",
-      icon: CircleDollarSign
-    },
-    {
-      title: "Saldo atual",
-      value: formatCurrency(operations?.financial.balance ?? 0),
-      comparison: "entradas menos saidas pagas",
-      trend: balanceTrend,
-      href: "/financeiro",
-      icon: WalletCards
-    },
-    {
-      title: "Agendamentos hoje",
-      value: String(operations?.appointmentsToday.length ?? 0),
-      comparison: "agenda real do dia",
-      trend: "neutral" as const,
-      href: "/agenda",
-      icon: CalendarDays
-    },
-    {
-      title: "Novos contatos",
-      value: String(operations?.contactsThisMonth ?? 0),
-      comparison: "criados neste mes",
-      trend: "neutral" as const,
-      href: "/crm",
-      icon: Users
-    },
-    {
-      title: "Oportunidades abertas",
-      value: String(operations?.openDeals.length ?? 0),
-      comparison: "negocios em andamento",
-      trend: "neutral" as const,
-      href: "/crm",
-      icon: Goal
-    },
-    {
-      title: "A receber",
-      value: formatCurrency(operations?.financial.pendingReceivable ?? 0),
-      comparison: "receitas pendentes",
-      trend: "neutral" as const,
-      href: "/financeiro",
-      icon: Banknote
-    },
-    {
-      title: "Tarefas atrasadas",
-      value: String(operations?.overdueTasks ?? 0),
-      comparison: "pendencias vencidas",
-      trend: overdueTrend,
-      href: "/tarefas",
-      icon: TrendingUp
-    },
-    {
-      title: "Taxa de conversao",
-      value: `${operations?.conversionRate ?? 0}%`,
-      comparison: "ganhos sobre fechados",
-      trend: "neutral" as const,
-      href: "/relatorios",
-      icon: TrendingUp
-    }
+    { href: "/agenda", label: "Novo agendamento", icon: Plus, tone: "bg-[var(--hp-accent)] text-[#04100a]" },
+    { href: "/clientes", label: "Novo cliente", icon: UserPlus, tone: "bg-white/10 text-white" },
+    { href: "/vitrine", label: "Editar vitrine", icon: Store, tone: "bg-white/10 text-white" },
+    { href: publicUrl, label: "Compartilhar", icon: Share2, tone: "bg-white/10 text-white" }
   ];
 
   return (
-    <section className="px-5 py-7 lg:px-8">
+    <section className="mx-auto grid max-w-6xl gap-5 px-4 py-5 sm:px-6 lg:px-8">
       <OnboardingModal
-        initialDismissed={Boolean(
-          onboardingProgress?.dismissed || onboardingProgress?.onboarding_completed_at
-        )}
+        initialDismissed={Boolean(onboardingProgress?.dismissed || onboardingProgress?.onboarding_completed_at)}
         initialStep={onboardingProgress?.current_step ?? 0}
       />
 
-      <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <p className="text-xs font-black uppercase text-brand-orange">
-            {dashboard.organization.name} - {dashboard.stats.status}
-          </p>
-          <h1 className="mt-2 text-2xl font-black tracking-tight lg:text-3xl">
-            Ola, {name}. Veja como esta sua operacao hoje.
-          </h1>
-          <p className="mt-1 text-sm font-medium text-zinc-600">
-            Hoje e {getFormattedDate()}. Status da conta: {dashboard.stats.activePlan}.
-          </p>
+      <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.03] p-5 shadow-2xl shadow-black/20 sm:p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-zinc-400">{getDateLabel()}</p>
+            <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-5xl">
+              {getGreeting()}, {name}! <span className="text-[var(--hp-accent)]">Tudo simples.</span>
+            </h1>
+            <p className="mt-3 max-w-2xl text-base text-zinc-400">
+              Aqui esta o que merece sua atencao hoje em {dashboard.organization.name}.
+            </p>
+          </div>
+          <Link
+            href="/ia"
+            className="hidden rounded-full border border-emerald-400/20 bg-emerald-400/10 p-4 text-[var(--hp-accent)] sm:block"
+            aria-label="Abrir assistente"
+          >
+            <Sparkles className="h-6 w-6" />
+          </Link>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          {quickActions.map((action) => (
-            <Link
-              key={action.href}
-              href={action.href}
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-emerald-400 px-5 text-sm font-black text-white shadow-sm hover:bg-emerald-500"
-            >
-              <action.icon className="h-4 w-4" />
-              {action.label}
+        <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
+            <CalendarDays className="h-6 w-6 text-[var(--hp-accent)]" />
+            <p className="mt-4 text-3xl font-black">{today.length}</p>
+            <p className="text-sm font-semibold text-zinc-400">Agendamentos hoje</p>
+          </div>
+          <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
+            <WalletCards className="h-6 w-6 text-[var(--hp-accent)]" />
+            <p className="mt-4 text-3xl font-black">{formatCurrency(balance)}</p>
+            <p className="text-sm font-semibold text-zinc-400">Saldo simples</p>
+          </div>
+          <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
+            <CircleDollarSign className="h-6 w-6 text-amber-300" />
+            <p className="mt-4 text-3xl font-black">{formatCurrency(pendingReceivable)}</p>
+            <p className="text-sm font-semibold text-zinc-400">A receber</p>
+          </div>
+          <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
+            <MessageCircle className="h-6 w-6 text-sky-300" />
+            <p className="mt-4 text-3xl font-black">{operations?.contactsThisMonth ?? 0}</p>
+            <p className="text-sm font-semibold text-zinc-400">Novos contatos</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="hp-card rounded-[2rem] p-5 sm:p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-black uppercase tracking-wide text-[var(--hp-accent)]">Proximos horarios</p>
+              <h2 className="mt-1 text-2xl font-black">Agenda do dia</h2>
+            </div>
+            <Link href="/agenda" className="text-sm font-bold text-zinc-300 hover:text-white">Ver agenda</Link>
+          </div>
+
+          <div className="mt-5 grid gap-3">
+            {upcoming.length === 0 ? (
+              <div className="rounded-[1.5rem] border border-dashed border-white/10 p-6 text-zinc-400">
+                Nenhum agendamento futuro encontrado.
+              </div>
+            ) : (
+              upcoming.map((appointment) => (
+                <Link
+                  href="/agenda"
+                  key={appointment.id}
+                  className="group flex items-center gap-4 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 transition hover:bg-white/[0.08]"
+                >
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[var(--hp-accent-soft)] font-black text-[var(--hp-accent)]">
+                    {formatTime(appointment.starts_at)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-lg font-black">{appointment.customer_name}</p>
+                    <p className="truncate text-sm text-zinc-400">{appointment.service?.name ?? "Servico nao informado"}</p>
+                  </div>
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-zinc-300">
+                    {appointment.status}
+                  </span>
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="hp-card rounded-[2rem] p-5 sm:p-6">
+          <p className="text-sm font-black uppercase tracking-wide text-[var(--hp-accent)]">Acoes rapidas</p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            {quickActions.map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className={`rounded-[1.5rem] p-4 text-center font-black shadow-lg transition hover:scale-[1.02] ${action.tone}`}
+              >
+                <action.icon className="mx-auto mb-3 h-6 w-6" />
+                {action.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <div className="hp-card rounded-[2rem] p-5 sm:p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-black">Pendencias leves</h2>
+            <Clock3 className="h-6 w-6 text-zinc-400" />
+          </div>
+          <div className="mt-5 grid gap-3">
+            {pendingTasks.length === 0 ? (
+              <p className="text-zinc-400">Nada urgente agora. O dia esta limpo.</p>
+            ) : (
+              pendingTasks.map((task) => (
+                <Link key={task.id} href="/tarefas" className="rounded-2xl bg-white/[0.04] p-4">
+                  <p className="font-bold">{task.title}</p>
+                  <p className="mt-1 text-sm text-zinc-500">{task.priority} · {task.status}</p>
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-[2rem] border border-emerald-400/20 bg-[var(--hp-accent-soft)] p-5 sm:p-6">
+          <Store className="h-8 w-8 text-[var(--hp-accent)]" />
+          <h2 className="mt-4 text-2xl font-black">Sua vitrine esta pronta para vender</h2>
+          <p className="mt-2 text-zinc-300">
+            Atualize servicos, fotos, links e compartilhe seu endereco publico com QR Code.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link href="/vitrine" className="rounded-full bg-[var(--hp-accent)] px-5 py-3 font-black text-[#04100a]">
+              Editar vitrine
             </Link>
-          ))}
+            <Link href={publicUrl} className="rounded-full border border-white/10 px-5 py-3 font-black text-white">
+              Abrir pagina
+            </Link>
+          </div>
         </div>
-      </div>
-
-      <div className="mb-5 rounded-lg border border-orange-100 bg-white p-4 shadow-sm">
-        <p className="text-sm font-bold text-zinc-700">
-          {getGreeting()}, sua central de comando esta pronta. Complete o checklist para liberar a melhor experiencia do Hunter Pro.
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {dashboardMetrics.map((metric) => (
-          <MetricCard key={metric.title} {...metric} />
-        ))}
-      </div>
-
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_1.35fr_1fr]">
-        <DashboardCalendar appointmentDays={appointmentDays} />
-        <SalesSummary items={paidByMethod} paidIncome={operations?.financial.paidIncome ?? 0} />
-        <FinancialSummary summary={operations?.financial ?? {
-          paidIncome: 0,
-          paidExpense: 0,
-          pendingReceivable: 0,
-          pendingPayable: 0,
-          balance: 0
-        }} />
-      </div>
-
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_420px]">
-        <TodayAppointments appointments={operations?.appointmentsToday ?? []} />
-        <PipelineSummary items={operations?.pipeline ?? []} />
-      </div>
-
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_1fr]">
-        <SetupChecklist items={setupItems} />
-        <AiAlerts alerts={aiAlerts} />
-      </div>
-
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_1fr]">
-        <ActivityFeed items={operations?.activities ?? []} />
-        <TaskList tasks={operations?.tasks ?? []} />
       </div>
     </section>
   );
