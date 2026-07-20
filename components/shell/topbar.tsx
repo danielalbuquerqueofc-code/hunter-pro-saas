@@ -63,13 +63,13 @@ export function Topbar({ email, organizationName, publicHref }: TopbarProps) {
         <div className="hidden sm:block">
           <UserMenu email={email} />
         </div>
-        <button
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#04100a] lg:hidden"
-          type="button"
+        <Link
+          href="/configuracoes"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100 lg:hidden"
           aria-label="Menu"
         >
           <Menu className="h-5 w-5" />
-        </button>
+        </Link>
       </div>
     </div>
   );

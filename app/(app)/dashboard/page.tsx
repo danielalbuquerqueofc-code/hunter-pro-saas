@@ -27,7 +27,13 @@ function formatTime(value: string) {
 }
 
 function getGreeting() {
-  const hour = new Date().getHours();
+  const hour = Number(
+    new Intl.DateTimeFormat("pt-BR", {
+      hour: "numeric",
+      hour12: false,
+      timeZone: "America/Sao_Paulo"
+    }).format(new Date())
+  );
   if (hour < 12) return "Bom dia";
   if (hour < 18) return "Boa tarde";
   return "Boa noite";
@@ -37,7 +43,8 @@ function getDateLabel() {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "long",
-    weekday: "long"
+    weekday: "long",
+    timeZone: "America/Sao_Paulo"
   }).format(new Date());
 }
 
@@ -72,10 +79,10 @@ export default async function DashboardPage() {
   const pendingTasks = operations?.tasks.filter((task) => task.status !== "DONE").slice(0, 3) ?? [];
   const publicUrl = `/p/${dashboard.organization.slug}`;
   const quickActions = [
-    { href: "/agenda", label: "Novo agendamento", icon: Plus, tone: "bg-[var(--hp-accent)] text-[#04100a]" },
-    { href: "/clientes", label: "Novo cliente", icon: UserPlus, tone: "bg-slate-100 text-white" },
-    { href: "/vitrine", label: "Editar vitrine", icon: Store, tone: "bg-slate-100 text-white" },
-    { href: publicUrl, label: "Compartilhar", icon: Share2, tone: "bg-slate-100 text-white" }
+    { href: "/agenda", label: "Novo agendamento", icon: Plus, tone: "bg-[var(--hp-accent)] text-[#04100a] shadow-emerald-500/20" },
+    { href: "/clientes", label: "Novo cliente", icon: UserPlus, tone: "bg-white text-slate-950 ring-1 ring-slate-200" },
+    { href: "/vitrine", label: "Editar vitrine", icon: Store, tone: "bg-white text-slate-950 ring-1 ring-slate-200" },
+    { href: publicUrl, label: "Abrir vitrine", icon: Share2, tone: "bg-white text-slate-950 ring-1 ring-slate-200" }
   ];
 
   return (
@@ -85,14 +92,14 @@ export default async function DashboardPage() {
         initialStep={onboardingProgress?.current_step ?? 0}
       />
 
-      <div className="rounded-[2rem] border border-slate-200 bg-gradient-to-br from-white/10 to-white/[0.03] p-5 shadow-2xl shadow-black/20 sm:p-7">
+      <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-900/10 sm:p-7">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-zinc-400">{getDateLabel()}</p>
+            <p className="text-sm font-semibold text-slate-500">{getDateLabel()}</p>
             <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-5xl">
               {getGreeting()}, {name}! <span className="text-[var(--hp-accent)]">Tudo simples.</span>
             </h1>
-            <p className="mt-3 max-w-2xl text-base text-zinc-400">
+            <p className="mt-3 max-w-2xl text-base text-slate-600">
               Aqui esta o que merece sua atencao hoje em {dashboard.organization.name}.
             </p>
           </div>
@@ -106,25 +113,25 @@ export default async function DashboardPage() {
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <div className="rounded-[1.5rem] border border-slate-200 bg-black/20 p-4">
+          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
             <CalendarDays className="h-6 w-6 text-[var(--hp-accent)]" />
             <p className="mt-4 text-3xl font-black">{today.length}</p>
-            <p className="text-sm font-semibold text-zinc-400">Agendamentos hoje</p>
+            <p className="text-sm font-semibold text-slate-600">Agendamentos hoje</p>
           </div>
-          <div className="rounded-[1.5rem] border border-slate-200 bg-black/20 p-4">
+          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
             <WalletCards className="h-6 w-6 text-[var(--hp-accent)]" />
             <p className="mt-4 text-3xl font-black">{formatCurrency(balance)}</p>
-            <p className="text-sm font-semibold text-zinc-400">Saldo simples</p>
+            <p className="text-sm font-semibold text-slate-600">Saldo simples</p>
           </div>
-          <div className="rounded-[1.5rem] border border-slate-200 bg-black/20 p-4">
-            <CircleDollarSign className="h-6 w-6 text-amber-300" />
+          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+            <CircleDollarSign className="h-6 w-6 text-amber-500" />
             <p className="mt-4 text-3xl font-black">{formatCurrency(pendingReceivable)}</p>
-            <p className="text-sm font-semibold text-zinc-400">A receber</p>
+            <p className="text-sm font-semibold text-slate-600">A receber</p>
           </div>
-          <div className="rounded-[1.5rem] border border-slate-200 bg-black/20 p-4">
-            <MessageCircle className="h-6 w-6 text-sky-300" />
+          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+            <MessageCircle className="h-6 w-6 text-sky-500" />
             <p className="mt-4 text-3xl font-black">{operations?.contactsThisMonth ?? 0}</p>
-            <p className="text-sm font-semibold text-zinc-400">Novos contatos</p>
+            <p className="text-sm font-semibold text-slate-600">Novos contatos</p>
           </div>
         </div>
       </div>
@@ -141,7 +148,7 @@ export default async function DashboardPage() {
 
           <div className="mt-5 grid gap-3">
             {upcoming.length === 0 ? (
-              <div className="rounded-[1.5rem] border border-dashed border-slate-200 p-6 text-zinc-400">
+              <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white p-6 text-slate-500">
                 Nenhum agendamento futuro encontrado.
               </div>
             ) : (
@@ -156,7 +163,7 @@ export default async function DashboardPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-lg font-black">{appointment.customer_name}</p>
-                    <p className="truncate text-sm text-zinc-400">{appointment.service?.name ?? "Servico nao informado"}</p>
+                    <p className="truncate text-sm text-slate-500">{appointment.service?.name ?? "Servico nao informado"}</p>
                   </div>
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
                     {appointment.status}
@@ -174,7 +181,7 @@ export default async function DashboardPage() {
               <Link
                 key={action.href}
                 href={action.href}
-                className={`rounded-[1.5rem] p-4 text-center font-black shadow-lg transition hover:scale-[1.02] ${action.tone}`}
+                className={`min-h-36 rounded-[1.5rem] p-4 text-center font-black shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl ${action.tone}`}
               >
                 <action.icon className="mx-auto mb-3 h-6 w-6" />
                 {action.label}
@@ -192,7 +199,7 @@ export default async function DashboardPage() {
           </div>
           <div className="mt-5 grid gap-3">
             {pendingTasks.length === 0 ? (
-              <p className="text-zinc-400">Nada urgente agora. O dia esta limpo.</p>
+              <p className="text-slate-500">Nada urgente agora. O dia esta limpo.</p>
             ) : (
               pendingTasks.map((task) => (
                 <Link key={task.id} href="/tarefas" className="rounded-2xl bg-slate-50 p-4">
@@ -214,7 +221,7 @@ export default async function DashboardPage() {
             <Link href="/vitrine" className="rounded-full bg-[var(--hp-accent)] px-5 py-3 font-black text-[#04100a]">
               Editar vitrine
             </Link>
-            <Link href={publicUrl} className="rounded-full border border-slate-200 px-5 py-3 font-black text-white">
+            <Link href={publicUrl} className="rounded-full border border-slate-300 bg-white px-5 py-3 font-black text-slate-950">
               Abrir pagina
             </Link>
           </div>

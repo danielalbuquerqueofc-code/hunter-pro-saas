@@ -23,8 +23,8 @@ export function MobileNavigation({ items }: { items: MobileNavItem[] }) {
     .map((href) => items.find((item) => item.href === href))
     .filter((item): item is MobileNavItem => Boolean(item));
   const moreHref =
-    items.find((item) => item.href === "/financeiro")?.href ??
     items.find((item) => item.href === "/configuracoes")?.href ??
+    items.find((item) => item.href === "/financeiro")?.href ??
     "/dashboard";
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
