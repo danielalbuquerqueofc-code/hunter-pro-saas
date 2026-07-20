@@ -34,8 +34,19 @@ export async function getPublicShowcase(slug: string) {
 
   if (!organization) return null;
 
-  const [{ data: showcase }, { data: links }, { data: gallery }, { data: services }, { data: professionals }] =
-    await Promise.all([
+  const nextWindow = new Date();
+  nextWindow.setDate(nextWindow.getDate() + 21);
+
+  const [
+    { data: showcase },
+    { data: links },
+    { data: gallery },
+    { data: services },
+    { data: professionals },
+    { data: availabilityRules },
+    { data: appointments },
+    { data: blockedTimes }
+  ] = await Promise.all([
       supabase
         .from("showcases")
         .select("*")
@@ -65,7 +76,27 @@ export async function getPublicShowcase(slug: string) {
         .select("id,name,bio")
         .eq("organization_id", organization.id)
         .eq("is_active", true)
-        .order("created_at", { ascending: true })
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("availability_rules")
+        .select("id,professional_id,weekday,start_time,end_time,is_active")
+        .eq("organization_id", organization.id)
+        .eq("is_active", true)
+        .order("weekday", { ascending: true }),
+      supabase
+        .from("appointments")
+        .select("id,professional_id,starts_at,ends_at,status")
+        .eq("organization_id", organization.id)
+        .in("status", ["REQUESTED", "CONFIRMED"])
+        .gte("starts_at", new Date().toISOString())
+        .lte("starts_at", nextWindow.toISOString())
+        .order("starts_at", { ascending: true }),
+      supabase
+        .from("blocked_times")
+        .select("id,professional_id,starts_at,ends_at,reason")
+        .eq("organization_id", organization.id)
+        .gte("ends_at", new Date().toISOString())
+        .lte("starts_at", nextWindow.toISOString())
     ]);
 
   return {
@@ -74,6 +105,9 @@ export async function getPublicShowcase(slug: string) {
     links: links ?? [],
     gallery: gallery ?? [],
     services: services ?? [],
-    professionals: professionals ?? []
+    professionals: professionals ?? [],
+    availabilityRules: availabilityRules ?? [],
+    appointments: appointments ?? [],
+    blockedTimes: blockedTimes ?? []
   };
 }
