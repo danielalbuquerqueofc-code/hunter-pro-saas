@@ -1,14 +1,28 @@
 import { Check, TrendingDown, TrendingUp } from "lucide-react";
 import { DashboardSection } from "@/components/dashboard/dashboard-section";
 
-export function FinancialSummary() {
+type FinancialSummaryProps = {
+  summary: {
+    paidIncome: number;
+    paidExpense: number;
+    pendingReceivable: number;
+    pendingPayable: number;
+    balance: number;
+  };
+};
+
+function formatCurrency(cents: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
+}
+
+export function FinancialSummary({ summary }: FinancialSummaryProps) {
   return (
     <DashboardSection
       title="Resumo financeiro"
       description="Entradas, saidas e contas"
       action={
         <span className="inline-flex items-center gap-1 text-sm font-black text-emerald-600">
-          R$ 0,00 de saldo <Check className="h-4 w-4" />
+          {formatCurrency(summary.balance)} de saldo <Check className="h-4 w-4" />
         </span>
       }
     >
@@ -18,7 +32,7 @@ export function FinancialSummary() {
           <p className="mt-2 text-xs leading-relaxed text-zinc-600">Total de receitas lancadas no dia</p>
           <p className="mt-6 inline-flex items-center gap-1 text-2xl font-black text-emerald-500">
             <TrendingUp className="h-5 w-5" />
-            R$ 0,00
+            {formatCurrency(summary.paidIncome)}
           </p>
         </div>
         <div className="flex flex-col items-center justify-center bg-red-50 p-5 text-center">
@@ -26,14 +40,14 @@ export function FinancialSummary() {
           <p className="mt-2 text-xs leading-relaxed text-zinc-600">Total de despesas lancadas no dia</p>
           <p className="mt-6 inline-flex items-center gap-1 text-2xl font-black text-red-500">
             <TrendingDown className="h-5 w-5" />
-            R$ 0,00
+            {formatCurrency(summary.paidExpense)}
           </p>
         </div>
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <FinancialTile label="Contas vencidas" value="0" tone="red" />
-        <FinancialTile label="A receber" value="R$ 0,00" tone="emerald" />
-        <FinancialTile label="A pagar" value="R$ 0,00" tone="amber" />
+        <FinancialTile label="A receber" value={formatCurrency(summary.pendingReceivable)} tone="emerald" />
+        <FinancialTile label="A pagar" value={formatCurrency(summary.pendingPayable)} tone="amber" />
       </div>
     </DashboardSection>
   );

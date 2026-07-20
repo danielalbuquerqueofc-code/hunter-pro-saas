@@ -1,16 +1,28 @@
 import { Banknote } from "lucide-react";
 import { DashboardSection } from "@/components/dashboard/dashboard-section";
-import { paymentSummary } from "@/features/dashboard/mock";
 
-export function SalesSummary() {
+type PaymentItem = {
+  label: string;
+  value: number;
+  color: string;
+};
+
+function formatCurrency(cents: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
+}
+
+export function SalesSummary({ items, paidIncome }: { items: PaymentItem[]; paidIncome: number }) {
+  const chartItems = items.length > 0 ? items : [{ label: "Sem vendas", value: 0, color: "#94a3b8" }];
+  const maxValue = Math.max(...chartItems.map((item) => item.value), 1);
+
   return (
     <DashboardSection
       title="Resumo de vendas"
       description="Valores separados por forma de pagamento"
-      action={<span className="text-sm font-black text-emerald-600">R$ 0,00 pagos esse mes</span>}
+      action={<span className="text-sm font-black text-emerald-600">{formatCurrency(paidIncome)} pagos</span>}
     >
       <div className="mb-4 flex flex-wrap gap-5 text-xs font-bold">
-        {paymentSummary.map((item) => (
+        {chartItems.map((item) => (
           <span key={item.label} className="inline-flex items-center gap-2">
             <span className="h-2 w-2 rotate-45" style={{ backgroundColor: item.color }} />
             {item.label}
@@ -28,12 +40,12 @@ export function SalesSummary() {
           </div>
         ))}
         <div className="absolute bottom-0 left-0 right-0 flex items-end justify-around gap-3">
-          {[18, 28, 40, 52, 65, 78].map((height, index) => (
+          {chartItems.map((item) => (
             <div
-              key={height}
+              key={item.label}
               className="flex w-full max-w-16 justify-center rounded-t-md bg-gradient-to-t from-[#8d2f1d] to-brand-orange"
-              style={{ height: `${height}%` }}
-              aria-label={`Vendas ${index + 1}`}
+              style={{ height: `${Math.max(10, Math.round((item.value / maxValue) * 90))}%` }}
+              aria-label={`Vendas ${item.label}`}
             >
               <Banknote className="mt-2 h-4 w-4 text-white/80" />
             </div>
@@ -41,9 +53,9 @@ export function SalesSummary() {
         </div>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-black sm:grid-cols-3 lg:grid-cols-6">
-        {paymentSummary.map((item) => (
+        {chartItems.map((item) => (
           <span key={item.label} style={{ color: item.color }}>
-            {item.value}
+            {formatCurrency(item.value)}
           </span>
         ))}
       </div>

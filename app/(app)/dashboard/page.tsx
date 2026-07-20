@@ -1,5 +1,14 @@
 import Link from "next/link";
-import { Building2 } from "lucide-react";
+import {
+  Banknote,
+  Building2,
+  CalendarDays,
+  CircleDollarSign,
+  Goal,
+  TrendingUp,
+  Users,
+  WalletCards
+} from "lucide-react";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { AiAlerts } from "@/components/dashboard/ai-alerts";
 import { DashboardCalendar } from "@/components/dashboard/dashboard-calendar";
@@ -13,10 +22,15 @@ import { TaskList } from "@/components/dashboard/task-list";
 import { TodayAppointments } from "@/components/dashboard/today-appointments";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
-import { dashboardMetrics, dashboardQuickActions } from "@/features/dashboard/mock";
 import { getDashboardData } from "@/features/dashboard/queries";
 import { getOnboardingProgress, getSetupChecklist } from "@/features/onboarding/queries";
 import { requireUser } from "@/lib/auth";
+
+type MetricTrend = "positive" | "negative" | "neutral";
+
+function formatCurrency(cents: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
+}
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -62,10 +76,97 @@ export default async function DashboardPage() {
   }
 
   const name = user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "admin";
+  const operations = dashboard.operations;
   const [onboardingProgress, setupItems] = await Promise.all([
     getOnboardingProgress(dashboard.organization.id, user.id),
     getSetupChecklist(dashboard.organization.id)
   ]);
+  const quickActions = [
+    { href: "/crm", label: "Novo contato", icon: Users },
+    { href: "/agenda", label: "Novo horario", icon: CalendarDays },
+    { href: "/servicos", label: "Novo servico", icon: Goal },
+    { href: "/financeiro", label: "Nova transacao", icon: WalletCards }
+  ];
+  const paidByMethod = Object.entries(operations?.paidByMethod ?? {}).map(([label, value], index) => ({
+    label,
+    value,
+    color: ["#38bdf8", "#22c55e", "#f59e0b", "#ef4444", "#94a3b8", "#111827"][index % 6]
+  }));
+  const appointmentDays = Array.from(
+    new Set((operations?.upcomingAppointments ?? []).map((appointment) => new Date(appointment.starts_at).getDate()))
+  );
+  const aiAlerts =
+    operations?.aiAgents.length
+      ? ["IA SDR configurada. Monitore execucoes antes de liberar automacoes externas."]
+      : ["IA SDR ainda sem agente ativo. Configure em IA antes de automatizar atendimento."];
+  const balanceTrend: MetricTrend = (operations?.financial.balance ?? 0) >= 0 ? "positive" : "negative";
+  const overdueTrend: MetricTrend = operations?.overdueTasks ? "negative" : "positive";
+  const dashboardMetrics = [
+    {
+      title: "Recebido",
+      value: formatCurrency(operations?.financial.paidIncome ?? 0),
+      comparison: "receitas pagas registradas",
+      trend: "neutral" as const,
+      href: "/financeiro",
+      icon: CircleDollarSign
+    },
+    {
+      title: "Saldo atual",
+      value: formatCurrency(operations?.financial.balance ?? 0),
+      comparison: "entradas menos saidas pagas",
+      trend: balanceTrend,
+      href: "/financeiro",
+      icon: WalletCards
+    },
+    {
+      title: "Agendamentos hoje",
+      value: String(operations?.appointmentsToday.length ?? 0),
+      comparison: "agenda real do dia",
+      trend: "neutral" as const,
+      href: "/agenda",
+      icon: CalendarDays
+    },
+    {
+      title: "Novos contatos",
+      value: String(operations?.contactsThisMonth ?? 0),
+      comparison: "criados neste mes",
+      trend: "neutral" as const,
+      href: "/crm",
+      icon: Users
+    },
+    {
+      title: "Oportunidades abertas",
+      value: String(operations?.openDeals.length ?? 0),
+      comparison: "negocios em andamento",
+      trend: "neutral" as const,
+      href: "/crm",
+      icon: Goal
+    },
+    {
+      title: "A receber",
+      value: formatCurrency(operations?.financial.pendingReceivable ?? 0),
+      comparison: "receitas pendentes",
+      trend: "neutral" as const,
+      href: "/financeiro",
+      icon: Banknote
+    },
+    {
+      title: "Tarefas atrasadas",
+      value: String(operations?.overdueTasks ?? 0),
+      comparison: "pendencias vencidas",
+      trend: overdueTrend,
+      href: "/tarefas",
+      icon: TrendingUp
+    },
+    {
+      title: "Taxa de conversao",
+      value: `${operations?.conversionRate ?? 0}%`,
+      comparison: "ganhos sobre fechados",
+      trend: "neutral" as const,
+      href: "/relatorios",
+      icon: TrendingUp
+    }
+  ];
 
   return (
     <section className="px-5 py-7 lg:px-8">
@@ -90,7 +191,7 @@ export default async function DashboardPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          {dashboardQuickActions.map((action) => (
+          {quickActions.map((action) => (
             <Link
               key={action.href}
               href={action.href}
@@ -116,24 +217,30 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_1.35fr_1fr]">
-        <DashboardCalendar />
-        <SalesSummary />
-        <FinancialSummary />
+        <DashboardCalendar appointmentDays={appointmentDays} />
+        <SalesSummary items={paidByMethod} paidIncome={operations?.financial.paidIncome ?? 0} />
+        <FinancialSummary summary={operations?.financial ?? {
+          paidIncome: 0,
+          paidExpense: 0,
+          pendingReceivable: 0,
+          pendingPayable: 0,
+          balance: 0
+        }} />
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_420px]">
-        <TodayAppointments />
-        <PipelineSummary />
+        <TodayAppointments appointments={operations?.appointmentsToday ?? []} />
+        <PipelineSummary items={operations?.pipeline ?? []} />
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_1fr]">
         <SetupChecklist items={setupItems} />
-        <AiAlerts />
+        <AiAlerts alerts={aiAlerts} />
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_1fr]">
-        <ActivityFeed />
-        <TaskList />
+        <ActivityFeed items={operations?.activities ?? []} />
+        <TaskList tasks={operations?.tasks ?? []} />
       </div>
     </section>
   );

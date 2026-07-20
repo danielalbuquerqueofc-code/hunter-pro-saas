@@ -1,4 +1,4 @@
-import { setupChecklist, type SetupChecklistItem } from "@/features/dashboard/mock";
+import { setupChecklist, type SetupChecklistItem } from "@/features/onboarding/checklist";
 import { createClient } from "@/lib/supabase/server";
 
 type OnboardingProgress = {

@@ -2,21 +2,10 @@ import { AppHeader } from "@/components/layout/app-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AiAgentForm } from "@/features/ai/ai-agent-form";
 import { getAiData } from "@/features/ai/queries";
-import { getCurrentOrganization } from "@/features/organizations/current";
-import { requireUser } from "@/lib/auth";
+import { requireOrganizationAccess } from "@/features/organizations/guards";
 
 export default async function IaPage() {
-  const user = await requireUser();
-  const { organization } = await getCurrentOrganization(user.id);
-
-  if (!organization) {
-    return (
-      <>
-        <AppHeader title="IA SDR" eyebrow="Fase 6" />
-        <section className="p-4 sm:p-6 lg:p-8"><Card><CardContent className="p-6">Cadastre sua empresa antes da IA.</CardContent></Card></section>
-      </>
-    );
-  }
+  const { organization } = await requireOrganizationAccess(["OWNER", "ADMIN", "MANAGER"]);
 
   const { agents, runs, integrations, events } = await getAiData(organization.id);
 

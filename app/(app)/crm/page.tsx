@@ -2,25 +2,10 @@ import { AppHeader } from "@/components/layout/app-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CrmActivityForm, CrmForms } from "@/features/crm/crm-forms";
 import { getCrmData } from "@/features/crm/queries";
-import { getCurrentOrganization } from "@/features/organizations/current";
-import { requireUser } from "@/lib/auth";
+import { requireOrganizationAccess } from "@/features/organizations/guards";
 
 export default async function CrmPage() {
-  const user = await requireUser();
-  const { organization } = await getCurrentOrganization(user.id);
-
-  if (!organization) {
-    return (
-      <>
-        <AppHeader title="CRM" eyebrow="Fase 3" />
-        <section className="p-8">
-          <Card>
-            <CardContent className="p-6">Cadastre sua empresa antes de usar o CRM.</CardContent>
-          </Card>
-        </section>
-      </>
-    );
-  }
+  const { organization } = await requireOrganizationAccess(["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT"]);
 
   const { contacts, stages, deals, activities } = await getCrmData(organization.id);
   const totalPipeline = deals.reduce((sum, deal) => sum + Number(deal.value_cents ?? 0), 0);

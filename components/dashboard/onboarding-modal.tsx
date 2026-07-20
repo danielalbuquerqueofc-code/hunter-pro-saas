@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { saveOnboardingProgressAction } from "@/features/onboarding/actions";
@@ -25,17 +25,10 @@ export function OnboardingModal({
   initialDismissed = false,
   initialStep = 0
 }: OnboardingModalProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(!initialDismissed);
   const [step, setStep] = useState(() => Math.min(Math.max(initialStep, 0), steps.length - 1));
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [, startTransition] = useTransition();
-
-  useEffect(() => {
-    setOpen(
-      !initialDismissed &&
-        window.localStorage.getItem("hunter-pro-onboarding-dismissed") !== "true"
-    );
-  }, [initialDismissed]);
 
   function persistProgress(nextStep: number, options?: { completed?: boolean; dismissed?: boolean }) {
     startTransition(() => {

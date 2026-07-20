@@ -1,7 +1,10 @@
 import { Users } from "lucide-react";
 import { ModulePlaceholder } from "@/components/states/module-placeholder";
+import { requireOrganizationAccess } from "@/features/organizations/guards";
 
-export default function ClienteDetalhePage() {
+export default async function ClienteDetalhePage() {
+  await requireOrganizationAccess(["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT"]);
+
   return (
     <ModulePlaceholder
       title="Detalhe do cliente"

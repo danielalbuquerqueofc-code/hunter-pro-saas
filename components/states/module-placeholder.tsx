@@ -25,8 +25,8 @@ export function ModulePlaceholder({
       </div>
       <EmptyState
         icon={icon}
-        title={`${title} pronto para receber dados`}
-        description="A estrutura visual, rotas e permissoes estao preparadas. A proxima fase conecta formularios, consultas reais e automacoes do modulo."
+        title={`${title} bloqueado ate ficar completo`}
+        description="Este modulo esta protegido por permissao, mas nao aparece no menu principal enquanto nao tiver fluxo completo, dados reais e operacao ponta a ponta."
         action={
           <Button asChild variant="outline">
             <Link href="/dashboard">Voltar ao painel</Link>

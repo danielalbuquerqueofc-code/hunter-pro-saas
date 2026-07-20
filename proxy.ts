@@ -26,7 +26,7 @@ const privatePrefixes = [
   "/admin"
 ];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   const isPrivateRoute = privatePrefixes.some((prefix) =>
     request.nextUrl.pathname.startsWith(prefix)

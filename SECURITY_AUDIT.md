@@ -1,18 +1,25 @@
 # Auditoria de seguranca - Fases 1 a 6
 
-Data: 2026-07-13
+Data: 2026-07-20
 
 ## Resultado
 
 As Fases 1 e 2 foram revisadas antes da continuidade. As Fases 3 a 6 foram implementadas com foco em isolamento multiempresa, LGPD e RLS.
 
+Em 2026-07-20 foi executado o primeiro bloco de endurecimento do MVP comercial: rotas privadas com guard server-side, menu por feature flag e dashboard sem dados mockados visiveis em producao.
+
 ## Ajustes feitos na revisao
 
-- Rotas privadas novas foram adicionadas ao `middleware.ts`: `/crm`, `/vitrine`, `/servicos` e `/agenda`.
+- Rotas privadas sao protegidas no `proxy.ts` e revalidadas nas paginas/actions sensiveis.
 - A Fase 2 foi endurecida: servicos, profissionais, disponibilidade e agendamento publico agora exigem vitrine publicada.
 - A Fase 3 nao concede permissao `anon` para tabelas de CRM.
 - As Fases 4, 5 e 6 nao concedem permissao `anon` para financeiro, atendimento, automacoes ou IA.
 - Integracoes guardam apenas `secret_ref`, nao tokens em texto aberto.
+- Rotas privadas estruturais que ainda sao placeholders passaram a chamar `requireOrganizationAccess`.
+- Modulos incompletos foram marcados como `disabled` em `lib/modules.ts` e ficam fora do menu principal.
+- Acoes rapidas apontam somente para rotas com fluxo minimo funcional.
+- Dashboard principal passou a consumir dados reais das tabelas da organizacao; o antigo arquivo de mock do dashboard foi removido.
+- Foi criado `scripts/security-audit.mjs` para travar regressao local de guards e mocks no dashboard.
 
 ## Pontos verificados
 
@@ -36,10 +43,13 @@ As Fases 1 e 2 foram revisadas antes da continuidade. As Fases 3 a 6 foram imple
 
 ## Validacao pendente
 
-O typecheck ainda nao roda porque `node_modules` nao foi instalado neste ambiente. Depois de instalar as dependencias:
+Ainda faltam testes E2E e testes reais de isolamento no Supabase com duas organizacoes. A auditoria local cobre apenas verificacoes estaticas do codigo.
+
+Comandos executados em 2026-07-20:
 
 ```bash
-npm.cmd install
+npm.cmd test
 npm.cmd run typecheck
-npm.cmd run lint
 ```
+
+O build, lint e audit devem ser executados a cada bloco de entrega.

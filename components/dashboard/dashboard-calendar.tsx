@@ -1,31 +1,27 @@
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { DashboardSection } from "@/components/dashboard/dashboard-section";
 
 const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
-const monthDays = Array.from({ length: 31 }, (_, index) => index + 1);
 
-export function DashboardCalendar() {
-  const today = new Date().getDate();
+export function DashboardCalendar({ appointmentDays }: { appointmentDays: number[] }) {
+  const now = new Date();
+  const today = now.getDate();
+  const monthDays = Array.from(
+    { length: new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() },
+    (_, index) => index + 1
+  );
+  const monthLabel = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(now);
+  const hasToday = appointmentDays.includes(today);
 
   return (
     <DashboardSection
       title="Calendario mensal"
-      description="Julho / 2026"
-      action={
-        <div className="flex gap-1">
-          <button className="rounded-md border border-zinc-200 p-2 text-zinc-500" type="button" aria-label="Mes anterior">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button className="rounded-md border border-zinc-200 p-2 text-zinc-500" type="button" aria-label="Proximo mes">
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      }
+      description={monthLabel}
     >
       <div className="mb-4 flex items-center gap-2 rounded-md bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700">
         <CalendarDays className="h-4 w-4" />
-        Sem agendamentos hoje
+        {hasToday ? "Existem agendamentos hoje" : "Sem agendamentos hoje"}
       </div>
       <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-zinc-500">
         {weekDays.map((day) => (
@@ -46,7 +42,7 @@ export function DashboardCalendar() {
             }`}
           >
             {day}
-            {[7, 18, 24].includes(day) ? (
+            {appointmentDays.includes(day) ? (
               <span className="absolute bottom-1 h-1.5 w-1.5 rounded-full bg-emerald-400" />
             ) : null}
           </Link>

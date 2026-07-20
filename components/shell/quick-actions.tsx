@@ -2,12 +2,12 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 
 const actions = [
-  { href: "/leads", label: "Novo lead" },
-  { href: "/agenda", label: "Novo agendamento" },
-  { href: "/orcamentos", label: "Novo orcamento" },
-  { href: "/vendas", label: "Nova venda" },
+  { href: "/crm", label: "Novo contato ou oportunidade" },
+  { href: "/agenda", label: "Novo horario ou profissional" },
+  { href: "/servicos", label: "Novo servico" },
   { href: "/financeiro", label: "Nova transacao" },
-  { href: "/clientes", label: "Cadastrar cliente" }
+  { href: "/tarefas", label: "Nova tarefa" },
+  { href: "/vitrine", label: "Editar vitrine" }
 ];
 
 export function QuickActions() {

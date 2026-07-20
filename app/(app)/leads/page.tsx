@@ -1,7 +1,10 @@
 import { UserPlus } from "lucide-react";
 import { ModulePlaceholder } from "@/components/states/module-placeholder";
+import { requireOrganizationAccess } from "@/features/organizations/guards";
 
-export default function LeadsPage() {
+export default async function LeadsPage() {
+  await requireOrganizationAccess(["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT"]);
+
   return (
     <ModulePlaceholder
       title="Leads"

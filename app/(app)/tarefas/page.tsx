@@ -2,21 +2,10 @@ import { AppHeader } from "@/components/layout/app-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskForm } from "@/features/operations/operation-forms";
 import { getOperationsData } from "@/features/operations/queries";
-import { getCurrentOrganization } from "@/features/organizations/current";
-import { requireUser } from "@/lib/auth";
+import { requireOrganizationAccess } from "@/features/organizations/guards";
 
 export default async function TarefasPage() {
-  const user = await requireUser();
-  const { organization } = await getCurrentOrganization(user.id);
-
-  if (!organization) {
-    return (
-      <>
-        <AppHeader title="Tarefas" eyebrow="Fase 5" />
-        <section className="p-8"><Card><CardContent className="p-6">Cadastre sua empresa antes das tarefas.</CardContent></Card></section>
-      </>
-    );
-  }
+  const { organization } = await requireOrganizationAccess(["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT", "PROFESSIONAL", "FINANCIAL"]);
 
   const { tasks, contacts, deals } = await getOperationsData(organization.id);
 

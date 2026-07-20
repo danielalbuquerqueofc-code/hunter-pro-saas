@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { createOrganizationAction } from "@/features/onboarding/actions";
 import { getDashboardData } from "@/features/dashboard/queries";
 import { requireUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 type ConfiguracoesPageProps = {
   searchParams: Promise<{ error?: string }>;
@@ -15,6 +16,10 @@ export default async function ConfiguracoesPage({ searchParams }: ConfiguracoesP
   const query = await searchParams;
   const user = await requireUser();
   const dashboard = await getDashboardData(user.id);
+
+  if (dashboard.organization && !["OWNER", "ADMIN", "SUPER_ADMIN"].includes(String(dashboard.role))) {
+    redirect("/dashboard");
+  }
 
   return (
     <>

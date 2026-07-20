@@ -123,11 +123,11 @@ Implementado nesta etapa:
 
 1. Shell principal do painel com topbar, busca global, seletor de empresa, notificacoes, ajuda, vitrine e menu mobile.
 2. Navegacao preparada por perfil visual.
-3. Dashboard operacional modular com metricas, acoes rapidas, calendario, agenda de hoje, vendas, financeiro, funil, atividades, tarefas, checklist e alertas de IA simulados.
+3. Dashboard operacional modular com metricas, acoes rapidas, calendario, agenda de hoje, vendas, financeiro, funil, atividades, tarefas e checklist.
 4. Onboarding inicial visual com etapas e persistencia temporaria no navegador.
-5. Rotas privadas estruturais para leads, pipeline, clientes, conversas, orcamentos, vendas, avaliacoes, IA SDR e usuarios.
+5. Rotas privadas estruturais para leads, pipeline, clientes, conversas, orcamentos, vendas, avaliacoes, IA SDR e usuarios, ocultas do menu enquanto nao tiverem fluxo completo.
 6. Rotas publicas estruturais para agendamento, orcamento e avaliacao.
-7. Mocks separados em `features/dashboard/mock.ts`.
+7. Dashboard de producao conectado a dados reais do Supabase; dados demonstrativos nao aparecem como numeros reais.
 8. Migration `0007_panel_onboarding_settings.sql` para onboarding, configuracoes da organizacao e campos adicionais.
 
 Ainda nao implementado nesta fase:
@@ -192,6 +192,7 @@ No Windows, use:
 npm.cmd run dev
 npm.cmd run lint
 npm.cmd run typecheck
+npm.cmd test
 npm.cmd run build
 ```
 

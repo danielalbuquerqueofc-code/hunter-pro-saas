@@ -6,25 +6,12 @@ import { Select } from "@/components/ui/select";
 import { createAvailabilityRuleAction } from "@/features/appointments/actions";
 import { ProfessionalsPanel } from "@/features/appointments/professionals-panel";
 import { getAgendaData } from "@/features/appointments/queries";
-import { getCurrentOrganization } from "@/features/organizations/current";
-import { requireUser } from "@/lib/auth";
+import { requireOrganizationAccess } from "@/features/organizations/guards";
 
 const weekdays = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"];
 
 export default async function AgendaPage() {
-  const user = await requireUser();
-  const { organization } = await getCurrentOrganization(user.id);
-
-  if (!organization) {
-    return (
-      <>
-        <AppHeader title="Agenda" eyebrow="Fase 2" />
-        <section className="p-8">
-          <Card><CardContent className="p-6">Cadastre sua empresa antes da agenda.</CardContent></Card>
-        </section>
-      </>
-    );
-  }
+  const { organization } = await requireOrganizationAccess(["OWNER", "ADMIN", "MANAGER", "ATTENDANT", "PROFESSIONAL"]);
 
   const { professionals, rules, appointments } = await getAgendaData(organization.id);
 

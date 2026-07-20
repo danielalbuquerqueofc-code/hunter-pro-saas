@@ -22,7 +22,7 @@ export function AppShell({
   organizationSlug,
   role
 }: AppShellProps) {
-  const visibleNav = shellNavItems.filter((item) => canSeeNavItem(role, item.roles));
+  const visibleNav = shellNavItems.filter((item) => canSeeNavItem(role, item));
   const publicHref = organizationSlug ? `/p/${organizationSlug}` : "/vitrine";
 
   return (

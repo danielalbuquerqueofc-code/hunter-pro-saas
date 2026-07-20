@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2, Circle } from "lucide-react";
 import { DashboardSection } from "@/components/dashboard/dashboard-section";
-import { setupChecklist, type SetupChecklistItem } from "@/features/dashboard/mock";
+import { setupChecklist, type SetupChecklistItem } from "@/features/onboarding/checklist";
 
 type SetupChecklistProps = {
   items?: SetupChecklistItem[];

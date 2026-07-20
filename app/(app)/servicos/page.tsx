@@ -2,23 +2,10 @@ import { AppHeader } from "@/components/layout/app-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServicesData } from "@/features/services/queries";
 import { ServiceForms } from "@/features/services/service-forms";
-import { getCurrentOrganization } from "@/features/organizations/current";
-import { requireUser } from "@/lib/auth";
+import { requireOrganizationAccess } from "@/features/organizations/guards";
 
 export default async function ServicosPage() {
-  const user = await requireUser();
-  const { organization } = await getCurrentOrganization(user.id);
-
-  if (!organization) {
-    return (
-      <>
-        <AppHeader title="Servicos" eyebrow="Fase 2" />
-        <section className="p-8">
-          <Card><CardContent className="p-6">Cadastre sua empresa antes dos servicos.</CardContent></Card>
-        </section>
-      </>
-    );
-  }
+  const { organization } = await requireOrganizationAccess(["OWNER", "ADMIN", "MANAGER"]);
 
   const { categories, services } = await getServicesData(organization.id);
 
