@@ -34,7 +34,7 @@ export function AppShell({
 
       <main className="min-w-0 pb-28 lg:pb-8">{children}</main>
 
-      <MobileNavigation items={visibleNav} />
+      <MobileNavigation items={visibleNav.map((item) => ({ href: item.href, label: item.label }))} />
 
       <div className="fixed bottom-24 right-5 z-40 lg:bottom-8">
         <Link
