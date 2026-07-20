@@ -299,32 +299,33 @@ function BookingDialog({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-slate-950/45 backdrop-blur-sm sm:items-center sm:justify-center">
-      <div className="max-h-[92vh] w-full overflow-hidden rounded-t-[2rem] bg-white shadow-2xl sm:max-w-2xl sm:rounded-[2rem]">
-        <div className="flex items-center justify-between border-b border-[var(--store-border)] px-5 py-4">
+    <div className="fixed inset-0 z-50 flex items-end bg-slate-950/35 backdrop-blur-sm sm:items-center sm:justify-center">
+      <div className="max-h-[94vh] w-full overflow-hidden rounded-t-[2rem] bg-white shadow-2xl sm:max-w-2xl sm:rounded-[2rem]">
+        <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-slate-200 sm:hidden" />
+        <div className="flex items-center justify-between px-5 pb-3 pt-5">
           <button
             type="button"
             onClick={() => (step > 1 ? setStep(step - 1) : onClose())}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--store-border)]"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--store-border)] bg-white shadow-sm"
             aria-label={step > 1 ? "Voltar etapa" : "Fechar agendamento"}
           >
             {step > 1 ? <ArrowLeft className="h-5 w-5" /> : <X className="h-5 w-5" />}
           </button>
-          <div className="text-center">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--store-primary)]">Etapa {step} de 4</p>
-            <h2 className="text-lg font-black text-[var(--store-text)]">Agende seu horario</h2>
+          <div className="min-w-0 text-center">
+            <h2 className="text-xl font-black text-[var(--store-text)]">Agende seu horario</h2>
+            <p className="text-xs font-bold text-[var(--store-muted)]">E rapido, facil e personalizado para voce.</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--store-border)]"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--store-border)] bg-white shadow-sm"
             aria-label="Fechar"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 px-5 pt-4" aria-label="Progresso do agendamento">
+        <div className="mx-auto grid max-w-32 grid-cols-4 gap-2 px-5 pb-3" aria-label="Progresso do agendamento">
           {[1, 2, 3, 4].map((item) => (
             <span
               key={item}
@@ -333,7 +334,7 @@ function BookingDialog({
           ))}
         </div>
 
-        <form action={requestAppointmentAction} className="max-h-[calc(92vh-112px)] overflow-y-auto px-5 py-5">
+        <form action={requestAppointmentAction} className="max-h-[calc(94vh-112px)] overflow-y-auto px-5 pb-7 pt-2">
           <input type="hidden" name="organizationId" value={organization.id} />
           <input type="hidden" name="serviceId" value={selectedService?.id ?? ""} />
           <input type="hidden" name="professionalId" value={professionalId} />
@@ -369,14 +370,19 @@ function BookingDialog({
                   ))}
                 </select>
               </div>
-              <div className="rounded-[1.5rem] border border-[var(--store-border)] bg-[var(--store-bg)] p-4">
-                <p className="text-lg font-black">{selectedService?.name ?? "Servico"}</p>
-                <p className="mt-1 text-sm leading-6 text-[var(--store-muted)]">
-                  {selectedService?.description || "Servico personalizado conforme sua necessidade."}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2 text-sm font-bold text-[var(--store-text)]">
-                  <span className="rounded-full bg-white px-3 py-2">{formatDuration(selectedService?.duration_minutes)}</span>
-                  <span className="rounded-full bg-white px-3 py-2">{formatCurrency(selectedService?.price_cents ?? 0)}</span>
+              <div className="grid grid-cols-[88px_1fr] gap-3 rounded-[1.3rem] border border-[var(--store-border)] bg-white p-3 shadow-sm">
+                <div className="h-24 overflow-hidden rounded-2xl bg-[var(--store-bg-soft)]">
+                  {selectedService ? <ServiceMedia service={selectedService} index={0} compact /> : null}
+                </div>
+                <div className="min-w-0">
+                  <p className="line-clamp-2 text-base font-black">{selectedService?.name ?? "Servico"}</p>
+                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--store-muted)]">
+                    {selectedService?.description || "Servico personalizado conforme sua necessidade."}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs font-bold text-[var(--store-text)]">
+                    <span className="rounded-full bg-[var(--store-bg)] px-3 py-1.5">{formatDuration(selectedService?.duration_minutes)}</span>
+                    <span className="rounded-full bg-[var(--store-bg)] px-3 py-1.5">{formatCurrency(selectedService?.price_cents ?? 0)}</span>
+                  </div>
                 </div>
               </div>
               <div>
@@ -667,20 +673,20 @@ export function PublicStorefront({
 
   return (
     <main style={style} className={`${fontClass} min-h-screen bg-[var(--store-bg)] text-[var(--store-text)]`}>
-      <header className="sticky top-0 z-40 border-b border-[var(--store-border)] bg-white/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-3 px-4 py-3 lg:px-8">
+      <header className="sticky top-0 z-40 bg-white/92 shadow-[0_10px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-5 py-3 lg:px-8">
           <a href="#inicio" className="flex min-w-0 items-center gap-3">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="" className="h-12 w-12 rounded-2xl object-cover ring-1 ring-[var(--store-border)]" />
+              <img src={logoUrl} alt="" className="h-14 w-14 rounded-full object-cover ring-1 ring-[var(--store-border)]" />
             ) : (
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--store-bg-soft)] text-lg font-black text-[var(--store-primary)]">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[var(--store-bg-soft)] text-lg font-black text-[var(--store-primary)]">
                 {initials(showcase.title)}
               </span>
             )}
             <span className="min-w-0">
-              <strong className="block truncate text-base font-black">{showcase.title}</strong>
-              <span className="block truncate text-xs font-bold text-[var(--store-muted)]">Vitrine digital</span>
+              <strong className="block truncate text-xl font-black text-[var(--store-primary)] sm:text-base">{showcase.title}</strong>
+              <span className="block truncate text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--store-muted)]">Vitrine digital</span>
             </span>
           </a>
           <nav className="hidden items-center gap-2 text-sm font-bold text-[var(--store-muted)] md:flex">
@@ -715,35 +721,51 @@ export function PublicStorefront({
         </div>
       </header>
 
-      <section id="inicio" className="mx-auto grid max-w-7xl gap-6 px-4 pb-8 pt-5 lg:grid-cols-[minmax(0,1.05fr)_430px] lg:px-8 lg:pb-12 lg:pt-8">
-        <div className="overflow-hidden rounded-[var(--store-radius)] border border-[var(--store-border)] bg-white shadow-[var(--store-shadow)]">
-          <div className="relative grid min-h-[620px] overflow-hidden lg:min-h-[560px] lg:grid-cols-[0.92fr_1fr]">
-            <div className="relative z-10 flex flex-col justify-between p-6 sm:p-9">
+      <section id="inicio" className="mx-auto grid max-w-7xl gap-6 px-5 pb-6 pt-5 lg:grid-cols-[minmax(0,1.05fr)_430px] lg:px-8 lg:pb-12 lg:pt-8">
+        <div className="overflow-hidden rounded-[2rem] border border-[var(--store-border)] bg-white shadow-[var(--store-shadow)]">
+          <div className="relative min-h-[660px] overflow-hidden lg:grid lg:min-h-[560px] lg:grid-cols-[0.92fr_1fr]">
+            <div className="pointer-events-none absolute bottom-0 right-0 top-20 w-[70%] overflow-hidden lg:relative lg:inset-auto lg:top-auto lg:w-auto">
+              {heroImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={heroImage} alt="" className="h-full w-full object-cover object-center" fetchPriority="high" />
+              ) : (
+                <div className="flex h-full min-h-[320px] items-center justify-center bg-[var(--store-bg-soft)]">
+                  <Store className="h-20 w-20 text-[var(--store-primary)] opacity-40" />
+                </div>
+              )}
+              <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-white via-white/80 to-transparent lg:hidden" />
+              <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-white via-white/80 to-transparent lg:hidden" />
+            </div>
+            <div className="relative z-10 flex min-h-[660px] max-w-[72%] flex-col justify-between p-6 pr-0 sm:max-w-[62%] sm:p-9 lg:min-h-[560px] lg:max-w-none lg:pr-9">
               <div>
-                <div className="mb-5 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-[var(--store-bg-soft)] px-3 py-2 text-xs font-black text-[var(--store-primary)]">
+                <div className="mb-5 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap">
+                  <span className="inline-flex items-center gap-2 rounded-xl bg-white/90 px-3 py-2 text-xs font-black text-[var(--store-primary)] shadow-sm ring-1 ring-[var(--store-border)]">
                     <ShieldCheck className="h-4 w-4" />
                     Atendimento verificado
                   </span>
                   {address ? (
-                    <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-bold text-[var(--store-muted)] ring-1 ring-[var(--store-border)]">
+                    <span className="inline-flex max-w-full items-center gap-2 rounded-xl bg-white/90 px-3 py-2 text-xs font-bold text-[var(--store-muted)] shadow-sm ring-1 ring-[var(--store-border)]">
                       <MapPin className="h-4 w-4" />
-                      {address}
+                      <span className="truncate">{address}</span>
                     </span>
                   ) : null}
                 </div>
-                <h1 className="max-w-xl text-4xl font-black leading-[0.98] tracking-tight text-[var(--store-text)] sm:text-6xl">
+                <div className="mb-4 inline-flex items-center gap-1 rounded-xl bg-white/90 px-3 py-2 text-xs font-black text-[var(--store-text)] shadow-sm ring-1 ring-[var(--store-border)]">
+                  <Star className="h-4 w-4 fill-[var(--store-primary)] text-[var(--store-primary)]" />
+                  4,9 <span className="text-yellow-400">★★★★★</span>
+                </div>
+                <h1 className="max-w-sm text-[2.55rem] font-black leading-[0.98] tracking-tight text-[var(--store-text)] sm:max-w-xl sm:text-6xl">
                   {showcase.subtitle || `Agende com ${showcase.title}`}
                 </h1>
-                <p className="mt-5 max-w-xl text-base leading-7 text-[var(--store-muted)] sm:text-lg">
+                <p className="mt-5 max-w-xs text-sm font-medium leading-6 text-[var(--store-muted)] sm:max-w-xl sm:text-lg sm:leading-7">
                   {showcase.description || organization.description || "Escolha o servico, veja horarios e fale com a equipe em poucos toques."}
                 </p>
               </div>
-              <div className="mt-8 grid gap-3 sm:flex">
+              <div className="mt-8 grid max-w-sm gap-3">
                 <button
                   type="button"
                   onClick={() => openBooking()}
-                  className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-[var(--store-primary)] px-6 text-base font-black text-[var(--store-primary-contrast)] shadow-xl"
+                  className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl bg-[var(--store-primary)] px-6 text-sm font-black text-[var(--store-primary-contrast)] shadow-xl sm:text-base"
                 >
                   <CalendarDays className="h-5 w-5" />
                   Agendar agora
@@ -753,25 +775,12 @@ export function PublicStorefront({
                     href={whatsapp}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-[var(--store-border)] bg-white px-6 text-base font-black text-[var(--store-text)]"
+                    className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl border border-[var(--store-primary)] bg-white/95 px-6 text-sm font-black text-[var(--store-primary)] shadow-sm sm:text-base"
                   >
                     <MessageCircle className="h-5 w-5" />
-                    WhatsApp
+                    Falar no WhatsApp
                   </a>
                 ) : null}
-              </div>
-            </div>
-            <div className="relative min-h-[320px] bg-[var(--store-bg-soft)] lg:min-h-full">
-              {heroImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" />
-              ) : (
-                <div className="flex h-full min-h-[320px] items-center justify-center">
-                  <Store className="h-20 w-20 text-[var(--store-primary)] opacity-40" />
-                </div>
-              )}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/35 to-transparent p-5 lg:hidden">
-                <p className="text-sm font-black text-white">{showcase.title}</p>
               </div>
             </div>
           </div>
@@ -814,46 +823,48 @@ export function PublicStorefront({
         </aside>
       </section>
 
-      <section id="servicos" className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
-        <div className="mb-5 flex items-end justify-between gap-4">
+      <section id="servicos" className="mx-auto max-w-7xl px-5 py-6 lg:px-8 lg:py-8">
+        <div className="mb-4 flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--store-primary)]">Servicos</p>
-            <h2 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Escolha o melhor atendimento</h2>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--store-primary)]">Nossos servicos</p>
+            <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-4xl">Escolha o melhor atendimento</h2>
           </div>
-          <span className="hidden text-sm font-bold text-[var(--store-muted)] sm:block">{services.length} servicos publicados</span>
+          <a href="#servicos" className="shrink-0 text-xs font-black text-[var(--store-primary)] sm:text-sm">
+            Ver todos
+          </a>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
           {services.map((service, index) => (
-            <article key={service.id} className="overflow-hidden rounded-[1.7rem] border border-[var(--store-border)] bg-white shadow-sm">
-              <div className="aspect-[16/10] overflow-hidden bg-[var(--store-bg-soft)]">
+            <article key={service.id} className="grid grid-cols-[108px_1fr] overflow-hidden rounded-2xl border border-[var(--store-border)] bg-white shadow-sm sm:block sm:rounded-[1.7rem]">
+              <div className="h-full min-h-[132px] overflow-hidden bg-[var(--store-bg-soft)] sm:aspect-[16/10] sm:h-auto">
                 <ServiceMedia service={service} index={index} />
               </div>
-              <div className="p-5">
+              <div className="flex min-w-0 flex-col p-3 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="text-xl font-black leading-tight">{service.name}</h3>
-                  <span className="shrink-0 rounded-full bg-[var(--store-bg-soft)] px-3 py-1 text-xs font-black text-[var(--store-primary)]">
+                  <h3 className="line-clamp-2 text-base font-black leading-tight sm:text-xl">{service.name}</h3>
+                  <span className="hidden shrink-0 rounded-full bg-[var(--store-bg-soft)] px-3 py-1 text-xs font-black text-[var(--store-primary)] sm:inline-flex">
                     Ativo
                   </span>
                 </div>
-                <p className="mt-3 min-h-12 text-sm leading-6 text-[var(--store-muted)]">
+                <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--store-muted)] sm:mt-3 sm:min-h-12 sm:text-sm sm:leading-6">
                   {service.description || "Servico personalizado conforme sua necessidade."}
                 </p>
-                <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-2xl bg-[var(--store-bg)] p-3">
-                    <span className="block text-xs font-bold text-[var(--store-muted)]">Tempo</span>
+                <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-1 text-xs sm:mt-4 sm:grid sm:grid-cols-2 sm:gap-2 sm:text-sm">
+                  <div className="sm:rounded-2xl sm:bg-[var(--store-bg)] sm:p-3">
+                    <span className="sr-only sm:not-sr-only sm:block sm:text-xs sm:font-bold sm:text-[var(--store-muted)]">Tempo</span>
                     <strong>{formatDuration(service.duration_minutes)}</strong>
                   </div>
-                  <div className="rounded-2xl bg-[var(--store-bg)] p-3">
-                    <span className="block text-xs font-bold text-[var(--store-muted)]">Valor</span>
-                    <strong>{formatCurrency(service.price_cents)}</strong>
+                  <div className="sm:rounded-2xl sm:bg-[var(--store-bg)] sm:p-3">
+                    <span className="block text-[10px] font-bold text-[var(--store-muted)] sm:text-xs">A partir de</span>
+                    <strong className="text-[var(--store-primary)]">{formatCurrency(service.price_cents)}</strong>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => openBooking(service.id)}
-                  className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--store-primary)] px-4 font-black text-[var(--store-primary-contrast)]"
+                  className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[var(--store-primary)] px-4 text-sm font-black text-[var(--store-primary-contrast)] sm:mt-4 sm:min-h-12 sm:rounded-2xl"
                 >
-                  <CalendarDays className="h-5 w-5" />
+                  <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
                   Agendar
                 </button>
               </div>
@@ -921,7 +932,7 @@ export function PublicStorefront({
         )}
       </section>
 
-      <section id="contato" className="mx-auto max-w-7xl px-4 pb-28 pt-8 lg:px-8 lg:pb-10">
+      <section id="contato" className="mx-auto max-w-7xl px-5 pb-28 pt-8 lg:px-8 lg:pb-10">
         <div className="rounded-[var(--store-radius)] border border-[var(--store-border)] bg-white p-6 shadow-[var(--store-shadow)]">
           <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
             <div>
@@ -974,7 +985,7 @@ export function PublicStorefront({
         </div>
       </section>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 grid grid-cols-5 border-t border-[var(--store-border)] bg-white/95 px-2 pb-[env(safe-area-inset-bottom)] text-[11px] font-black text-[var(--store-muted)] shadow-2xl backdrop-blur-xl lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 grid grid-cols-4 border-t border-[var(--store-border)] bg-white/96 px-3 pb-[env(safe-area-inset-bottom)] text-[11px] font-black text-[var(--store-muted)] shadow-[0_-14px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden">
         <a href="#inicio" className="flex min-h-16 flex-col items-center justify-center gap-1 text-[var(--store-primary)]">
           <Store className="h-5 w-5" />
           Inicio
@@ -983,16 +994,6 @@ export function PublicStorefront({
           <Sparkles className="h-5 w-5" />
           Servicos
         </a>
-        <button
-          type="button"
-          onClick={() => openBooking()}
-          className="-mt-5 flex min-h-20 flex-col items-center justify-center gap-1 text-[var(--store-primary)]"
-        >
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--store-primary)] text-[var(--store-primary-contrast)] shadow-xl">
-            <CalendarDays className="h-6 w-6" />
-          </span>
-          Agendar
-        </button>
         <a href="#avaliacoes" className="flex min-h-16 flex-col items-center justify-center gap-1">
           <Star className="h-5 w-5" />
           Avaliacoes

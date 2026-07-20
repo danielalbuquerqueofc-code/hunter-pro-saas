@@ -28,7 +28,8 @@ assertIncludes(queries, "kind === \"blocked\"", "blocked times are filtered from
 assertIncludes(queries, "kind === \"appointment\"", "busy appointments are filtered from safe busy times");
 assertIncludes(theme, "resolveShowcaseTheme", "safe theme resolver exists");
 assertIncludes(theme, "contrastRatio", "contrast protection exists");
-assertIncludes(storefront, "Etapa {step} de 4", "booking flow is step-based");
+assertIncludes(storefront, "Agende seu horario", "booking sheet keeps the scheduling flow");
+assertIncludes(storefront, "[1, 2, 3, 4]", "booking flow still tracks four steps");
 assertIncludes(storefront, "onClick={() => openBooking(service.id)}", "service cards preselect booking service");
 assertIncludes(storefront, "safe-area-inset-bottom", "mobile bottom navigation respects safe area");
 assertIncludes(storefront, "Sob consulta", "undefined zero price is not shown as promotional value");
