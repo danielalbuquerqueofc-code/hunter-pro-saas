@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ChevronRight,
   ExternalLink,
+  Heart,
   ImageIcon,
   Instagram,
   Link as LinkIcon,
@@ -18,9 +19,7 @@ import {
   Share2,
   ShieldCheck,
   Sparkles,
-  Star,
   Store,
-  Users,
   X
 } from "lucide-react";
 import { requestAppointmentAction } from "@/features/appointments/actions";
@@ -154,6 +153,26 @@ function safeExternalUrl(value: string | null | undefined) {
     return "";
   }
   return "";
+}
+
+function isUsableImage(value: string | null | undefined) {
+  if (!value) return false;
+  return !value.includes("encrypted-tbn");
+}
+
+function fallbackHeadline(title: string, organizationDescription?: string | null) {
+  const text = `${title} ${organizationDescription ?? ""}`.toLowerCase();
+  if (/(beleza|sobrancelha|cilios|manicure|estetica|studio|salao|barbearia)/.test(text)) {
+    return "Beleza e cuidado do seu jeito.";
+  }
+  if (/(consult|mentoria|servico|agenda|atendimento)/.test(text)) {
+    return "Agende seu atendimento com facilidade.";
+  }
+  return "Seu momento de cuidado comeca aqui.";
+}
+
+function shortServiceDescription(service: Service) {
+  return service.description || "Atendimento personalizado para o que voce precisa.";
 }
 
 function toDateInput(date: Date) {
@@ -377,7 +396,7 @@ function BookingDialog({
                 <div className="min-w-0">
                   <p className="line-clamp-2 text-base font-black">{selectedService?.name ?? "Servico"}</p>
                   <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--store-muted)]">
-                    {selectedService?.description || "Servico personalizado conforme sua necessidade."}
+                    {selectedService ? shortServiceDescription(selectedService) : "Atendimento personalizado."}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2 text-xs font-bold text-[var(--store-text)]">
                     <span className="rounded-full bg-[var(--store-bg)] px-3 py-1.5">{formatDuration(selectedService?.duration_minutes)}</span>
@@ -536,7 +555,7 @@ function BookingDialog({
                   <CheckCircle2 className="h-7 w-7 text-[var(--store-success)]" />
                   <div>
                     <p className="text-lg font-black text-[var(--store-text)]">Confira seu agendamento</p>
-                    <p className="text-sm text-[var(--store-muted)]">Depois de confirmar, sua solicitacao sera enviada.</p>
+                    <p className="text-sm text-[var(--store-muted)]">Depois de confirmar, o horario sera validado no sistema.</p>
                   </div>
                 </div>
                 <dl className="grid gap-3">
@@ -646,19 +665,25 @@ export function PublicStorefront({
   const fontClass = getFontClass(showcase.font_key);
   const logoUrl = showcase.logo_url || organization.logo_url;
   const firstServiceImage = services.find((service) => service.image_url)?.image_url;
-  const configuredHeroImage = showcase.hero_image_url?.includes("encrypted-tbn") ? null : showcase.hero_image_url;
+  const configuredHeroImage = isUsableImage(showcase.hero_image_url) ? showcase.hero_image_url : null;
   const heroPhoto = configuredHeroImage || firstServiceImage;
-  const softenHeroPhoto = false;
   const address =
     showcase.address_text || [organization.address, organization.city, organization.state].filter(Boolean).join(", ");
+  const headline = showcase.subtitle || fallbackHeadline(showcase.title, organization.description);
+  const description =
+    showcase.description || organization.description || "Escolha um servico, veja horarios disponiveis e agende em poucos toques.";
   const whatsapp = whatsappUrl(showcase.whatsapp || organization.whatsapp, `Ola! Quero agendar pela vitrine ${showcase.title}.`);
   const phone = showcase.phone || organization.phone;
   const instagram = safeExternalUrl(showcase.instagram_url);
+  const safeLinks = links
+    .map((link) => ({ ...link, url: safeExternalUrl(link.url) }))
+    .filter((link) => link.url);
   const primaryLinks = [
     instagram ? { label: "Instagram", url: instagram, icon: Instagram } : null,
     whatsapp ? { label: "WhatsApp", url: whatsapp, icon: MessageCircle } : null,
     phone ? { label: "Ligar", url: `tel:${phone.replace(/\s/g, "")}`, icon: Phone } : null
   ].filter(Boolean) as { label: string; url: string; icon: typeof Instagram }[];
+  const hasContact = primaryLinks.length > 0 || safeLinks.length > 0 || Boolean(address);
 
   function openBooking(serviceId?: string) {
     if (serviceId) setSelectedServiceId(serviceId);
@@ -668,7 +693,7 @@ export function PublicStorefront({
   async function shareShowcase() {
     const url = window.location.href;
     if (navigator.share) {
-      await navigator.share({ title: showcase.title, text: showcase.subtitle ?? showcase.title, url });
+      await navigator.share({ title: showcase.title, text: headline, url });
       return;
     }
     await navigator.clipboard.writeText(url);
@@ -676,28 +701,39 @@ export function PublicStorefront({
 
   return (
     <main style={style} className={`${fontClass} min-h-screen bg-[var(--store-bg)] text-[var(--store-text)]`}>
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-5 py-3 lg:px-8">
+      <header className="sticky top-0 z-40 border-b border-[var(--store-border)] bg-white/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-3 lg:px-8">
           <a href="#inicio" className="flex min-w-0 items-center gap-3">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="" className="h-14 w-14 rounded-full object-cover ring-1 ring-[var(--store-border)]" />
+              <img src={logoUrl} alt={`${showcase.title} logo`} className="h-12 w-12 rounded-2xl object-cover ring-1 ring-[var(--store-border)]" />
             ) : (
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[var(--store-bg-soft)] text-lg font-black text-[var(--store-primary)]">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--store-bg-soft)] text-lg font-black text-[var(--store-primary)]">
                 {initials(showcase.title)}
               </span>
             )}
             <span className="min-w-0">
-              <strong className="block truncate text-xl font-black text-[var(--store-text)] sm:text-base">{showcase.title}</strong>
-              <span className="block truncate text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--store-muted)]">Vitrine digital</span>
+              <strong className="block truncate text-base font-black text-[var(--store-text)] sm:text-lg">{showcase.title}</strong>
+              <span className="block truncate text-xs font-bold text-[var(--store-muted)]">Agendamento online</span>
             </span>
           </a>
           <nav className="hidden items-center gap-2 text-sm font-bold text-[var(--store-muted)] md:flex">
             <a href="#servicos" className="rounded-full px-4 py-2 hover:bg-[var(--store-bg-soft)]">Servicos</a>
-            <a href="#avaliacoes" className="rounded-full px-4 py-2 hover:bg-[var(--store-bg-soft)]">Avaliacoes</a>
-            <a href="#contato" className="rounded-full px-4 py-2 hover:bg-[var(--store-bg-soft)]">Contato</a>
+            {gallery.length ? <a href="#galeria" className="rounded-full px-4 py-2 hover:bg-[var(--store-bg-soft)]">Galeria</a> : null}
+            {hasContact ? <a href="#contato" className="rounded-full px-4 py-2 hover:bg-[var(--store-bg-soft)]">Contato</a> : null}
           </nav>
           <div className="flex items-center gap-2">
+            {whatsapp ? (
+              <a
+                href={whatsapp}
+                target="_blank"
+                rel="noreferrer"
+                className="hidden h-11 items-center gap-2 rounded-full border border-[var(--store-border)] bg-white px-4 text-sm font-black md:inline-flex"
+              >
+                <MessageCircle className="h-4 w-4 text-[var(--store-primary)]" />
+                WhatsApp
+              </a>
+            ) : null}
             <button
               type="button"
               onClick={shareShowcase}
@@ -724,55 +760,35 @@ export function PublicStorefront({
         </div>
       </header>
 
-      <section id="inicio" className="mx-auto grid max-w-7xl gap-6 px-5 pb-4 pt-2 lg:grid-cols-[minmax(0,1.05fr)_430px] lg:px-8 lg:pb-12 lg:pt-8">
-        <div className="overflow-hidden rounded-b-[2.2rem] bg-white lg:rounded-[2rem] lg:border lg:border-[var(--store-border)] lg:shadow-[var(--store-shadow)]">
-          <div className="relative overflow-hidden bg-gradient-to-br from-white via-white to-[var(--store-bg-soft)] lg:grid lg:min-h-[560px] lg:grid-cols-[0.92fr_1fr]">
-            <div className="pointer-events-none absolute bottom-0 right-0 top-0 w-[58%] overflow-hidden lg:relative lg:inset-auto lg:top-auto lg:w-auto">
-              {heroPhoto ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={heroPhoto}
-                  alt=""
-                  className={`h-full w-full object-cover object-center ${softenHeroPhoto ? "opacity-20 lg:opacity-80" : ""}`}
-                  fetchPriority="high"
-                />
-              ) : (
-                <div className="flex h-full min-h-[320px] items-center justify-center bg-[var(--store-bg-soft)]">
-                  {logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={logoUrl} alt="" className="h-36 w-36 rounded-full object-contain opacity-[0.04]" />
-                  ) : (
-                    <Store className="h-20 w-20 text-[var(--store-primary)] opacity-20" />
-                  )}
-                </div>
-              )}
-              <div className="absolute inset-y-0 left-0 w-3/4 bg-gradient-to-r from-white via-white/80 to-transparent lg:hidden" />
-              <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-white via-white/85 to-transparent lg:hidden" />
-            </div>
-            <div className="relative z-10 flex max-w-[76%] flex-col justify-center px-7 py-8 pr-0 sm:max-w-[62%] sm:p-9 lg:min-h-[560px] lg:max-w-none lg:justify-between lg:pr-9">
+      <section id="inicio" className="mx-auto grid max-w-7xl gap-5 px-5 pb-5 pt-5 lg:grid-cols-[minmax(0,1fr)_410px] lg:px-8 lg:py-8">
+        <div className="overflow-hidden rounded-[2rem] border border-[var(--store-border)] bg-white shadow-[var(--store-shadow)]">
+          <div className="grid gap-0 lg:min-h-[560px] lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="order-2 flex flex-col justify-between p-7 sm:p-9 lg:order-1 lg:p-10">
               <div>
-                <div className="mb-4 inline-flex items-center gap-1 rounded-xl bg-white/90 px-3 py-2 text-xs font-black text-[var(--store-text)] shadow-sm ring-1 ring-[var(--store-border)]">
-                  <Star className="h-4 w-4 fill-[var(--store-primary)] text-[var(--store-primary)]" />
-                  4,9 <span className="text-yellow-400">★★★★★</span>
+                <div className="mb-5 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-[var(--store-bg-soft)] px-4 py-2 text-xs font-black text-[var(--store-primary)]">
+                    <ShieldCheck className="h-4 w-4" />
+                    Atendimento verificado
+                  </span>
+                  {address ? (
+                    <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-[var(--store-border)] bg-white px-4 py-2 text-xs font-bold text-[var(--store-muted)]">
+                      <MapPin className="h-4 w-4 shrink-0 text-[var(--store-primary)]" />
+                      <span className="truncate">{address}</span>
+                    </span>
+                  ) : null}
                 </div>
-                <h1 className="max-w-sm text-[2rem] font-black leading-[1.03] tracking-tight text-[var(--store-text)] sm:max-w-xl sm:text-6xl">
-                  {showcase.subtitle || `Agende com ${showcase.title}`}
+                <h1 className="max-w-2xl text-[2.35rem] font-black leading-[1.02] tracking-tight text-[var(--store-text)] sm:text-6xl lg:text-7xl">
+                  {headline}
                 </h1>
-                <p className="mt-4 max-w-[15.5rem] text-[13px] font-medium leading-6 text-[var(--store-muted)] sm:max-w-xl sm:text-lg sm:leading-7">
-                  {showcase.description || organization.description || "Escolha o servico, veja horarios e fale com a equipe em poucos toques."}
+                <p className="mt-5 max-w-xl text-base font-medium leading-7 text-[var(--store-muted)] sm:text-lg">
+                  {description}
                 </p>
-                {address ? (
-                  <p className="mt-4 hidden max-w-xl items-center gap-2 text-xs font-bold text-[var(--store-muted)] lg:flex">
-                    <MapPin className="h-4 w-4 text-[var(--store-primary)]" />
-                    {address}
-                  </p>
-                ) : null}
               </div>
-              <div className="mt-6 grid max-w-xs gap-3 sm:max-w-sm">
+              <div className="mt-7 grid gap-3 sm:max-w-md sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => openBooking()}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[var(--store-primary)] px-6 text-sm font-black text-[var(--store-primary-contrast)] shadow-xl sm:min-h-14 sm:text-base"
+                  className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-[var(--store-primary)] px-6 text-base font-black text-[var(--store-primary-contrast)] shadow-lg"
                 >
                   <CalendarDays className="h-5 w-5" />
                   Agendar agora
@@ -782,13 +798,28 @@ export function PublicStorefront({
                     href={whatsapp}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[var(--store-primary)] bg-white/95 px-6 text-sm font-black text-[var(--store-primary)] shadow-sm sm:min-h-14 sm:text-base"
+                    className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-[var(--store-border)] bg-white px-6 text-base font-black text-[var(--store-text)] shadow-sm"
                   >
-                    <MessageCircle className="h-5 w-5" />
-                    Falar no WhatsApp
+                    <MessageCircle className="h-5 w-5 text-[var(--store-primary)]" />
+                    WhatsApp
                   </a>
                 ) : null}
               </div>
+            </div>
+            <div className="order-1 min-h-[280px] overflow-hidden bg-[var(--store-bg-soft)] lg:order-2 lg:min-h-[560px]">
+              {heroPhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={heroPhoto} alt="" className="h-full w-full object-cover object-center" fetchPriority="high" />
+              ) : (
+                <div className="flex h-full min-h-[280px] items-center justify-center bg-[var(--store-bg-soft)]">
+                  {logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={logoUrl} alt="" className="h-40 w-40 rounded-full object-contain opacity-10" />
+                  ) : (
+                    <Store className="h-20 w-20 text-[var(--store-primary)] opacity-20" />
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -823,100 +854,93 @@ export function PublicStorefront({
             ))}
             {services.length === 0 ? (
               <div className="rounded-3xl border border-dashed border-[var(--store-border)] bg-[var(--store-bg)] p-5 text-sm text-[var(--store-muted)]">
-                Esta vitrine ainda esta preparando os servicos.
+                Entre em contato para consultar disponibilidade.
               </div>
             ) : null}
           </div>
         </aside>
       </section>
 
-      <section id="servicos" className="mx-auto max-w-7xl px-5 py-6 lg:px-8 lg:py-8">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--store-primary)]">Nossos servicos</p>
-            <h2 className="mt-1 hidden text-2xl font-black tracking-tight sm:block sm:text-4xl">Escolha o melhor atendimento</h2>
-          </div>
-          <a href="#servicos" className="shrink-0 text-xs font-black text-[var(--store-primary)] sm:text-sm">
-            Ver todos
-          </a>
+      <section id="servicos" className="mx-auto max-w-7xl px-5 py-6 lg:px-8 lg:py-10">
+        <div className="mb-4">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--store-primary)]">Nossos servicos</p>
+          <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-4xl">Escolha o melhor atendimento</h2>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {services.map((service, index) => (
-            <article key={service.id} className="grid grid-cols-[108px_1fr] overflow-hidden rounded-2xl border border-[var(--store-border)] bg-white shadow-sm sm:block sm:rounded-[1.7rem]">
-              <div className="h-full min-h-[132px] overflow-hidden bg-[var(--store-bg-soft)] sm:aspect-[16/10] sm:h-auto">
-                <ServiceMedia service={service} index={index} />
-              </div>
-              <div className="flex min-w-0 flex-col p-3 sm:p-5">
-                <div className="flex items-start justify-between gap-3">
+            <article key={service.id} className="overflow-hidden rounded-[1.5rem] border border-[var(--store-border)] bg-white shadow-sm">
+              <div className="grid grid-cols-[112px_1fr] sm:block">
+                <div className="h-full min-h-[150px] overflow-hidden bg-[var(--store-bg-soft)] sm:aspect-[16/10] sm:h-auto">
+                  <ServiceMedia service={service} index={index} />
+                </div>
+                <div className="flex min-w-0 flex-col p-3 sm:p-5">
                   <h3 className="line-clamp-2 text-base font-black leading-tight sm:text-xl">{service.name}</h3>
-                  <span className="hidden shrink-0 rounded-full bg-[var(--store-bg-soft)] px-3 py-1 text-xs font-black text-[var(--store-primary)] sm:inline-flex">
-                    Ativo
-                  </span>
-                </div>
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--store-muted)] sm:mt-3 sm:min-h-12 sm:text-sm sm:leading-6">
-                  {service.description || "Servico personalizado conforme sua necessidade."}
-                </p>
-                <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-1 text-xs sm:mt-4 sm:grid sm:grid-cols-2 sm:gap-2 sm:text-sm">
-                  <div className="sm:rounded-2xl sm:bg-[var(--store-bg)] sm:p-3">
-                    <span className="sr-only sm:not-sr-only sm:block sm:text-xs sm:font-bold sm:text-[var(--store-muted)]">Tempo</span>
-                    <strong>{formatDuration(service.duration_minutes)}</strong>
+                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--store-muted)] sm:mt-3 sm:min-h-12 sm:text-sm sm:leading-6">
+                    {shortServiceDescription(service)}
+                  </p>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:mt-4 sm:text-sm">
+                    <div className="rounded-2xl bg-[var(--store-bg)] p-3">
+                      <span className="block text-[11px] font-bold text-[var(--store-muted)]">Duracao</span>
+                      <strong className="mt-1 block">{formatDuration(service.duration_minutes)}</strong>
+                    </div>
+                    <div className="rounded-2xl bg-[var(--store-bg)] p-3">
+                      <span className="block text-[11px] font-bold text-[var(--store-muted)]">{service.price_cents ? "Valor" : "Preco"}</span>
+                      <strong className="mt-1 block text-[var(--store-primary)]">{formatCurrency(service.price_cents)}</strong>
+                    </div>
                   </div>
-                  <div className="sm:rounded-2xl sm:bg-[var(--store-bg)] sm:p-3">
-                    <span className="block text-[10px] font-bold text-[var(--store-muted)] sm:text-xs">A partir de</span>
-                    <strong className="text-[var(--store-primary)]">{formatCurrency(service.price_cents)}</strong>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openBooking(service.id)}
+                    className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[var(--store-primary)] px-4 text-sm font-black text-[var(--store-primary-contrast)] sm:mt-4 sm:min-h-12 sm:rounded-2xl"
+                  >
+                    <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Agendar
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => openBooking(service.id)}
-                  className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[var(--store-primary)] px-4 text-sm font-black text-[var(--store-primary-contrast)] sm:mt-4 sm:min-h-12 sm:rounded-2xl"
-                >
-                  <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
-                  Agendar
-                </button>
               </div>
             </article>
           ))}
         </div>
         {services.length === 0 ? (
-          <div className="rounded-[1.7rem] border border-dashed border-[var(--store-border)] bg-white p-8 text-center text-[var(--store-muted)]">
-            Os servicos ainda nao foram publicados. Entre em contato para saber mais.
+          <div className="rounded-[1.7rem] border border-dashed border-[var(--store-border)] bg-white p-8 text-center">
+            <Sparkles className="mx-auto mb-3 h-8 w-8 text-[var(--store-primary)]" />
+            <h3 className="text-xl font-black">Atendimentos sob consulta</h3>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[var(--store-muted)]">
+              Fale com a equipe para saber quais servicos estao disponiveis no momento.
+            </p>
+            {whatsapp ? (
+              <a href={whatsapp} target="_blank" rel="noreferrer" className="mt-5 inline-flex min-h-12 items-center justify-center rounded-2xl bg-[var(--store-primary)] px-5 font-black text-[var(--store-primary-contrast)]">
+                Falar no WhatsApp
+              </a>
+            ) : null}
           </div>
         ) : null}
       </section>
 
-      <section id="avaliacoes" className="mx-auto grid max-w-7xl gap-4 px-4 py-8 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
-        <div className="rounded-[1.7rem] border border-[var(--store-border)] bg-white p-6 shadow-sm">
-          <Star className="h-8 w-8 fill-[var(--store-primary)] text-[var(--store-primary)]" />
-          <h2 className="mt-4 text-3xl font-black">Prova social</h2>
-          <p className="mt-3 text-sm leading-6 text-[var(--store-muted)]">
-            Quando houver avaliacoes cadastradas, elas aparecerao aqui com nota, depoimento e data. Por enquanto, esta vitrine preserva apenas informacoes reais.
-          </p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+      <section className="mx-auto max-w-7xl px-5 py-4 lg:px-8">
+        <div className="grid gap-3 sm:grid-cols-3">
           {[
-            ["Atendimento personalizado", Users],
-            ["Profissionais especializados", ShieldCheck],
-            ["Resposta rapida", MessageCircle],
-            ["Agenda online", CalendarDays]
-          ].map(([label, Icon]) => (
-            <div key={String(label)} className="rounded-[1.7rem] border border-[var(--store-border)] bg-white p-5 shadow-sm">
-              <Icon className="h-7 w-7 text-[var(--store-primary)]" />
+            ["Agenda facil", CalendarDays, "Escolha o melhor horario sem troca de mensagens."],
+            ["Atendimento com hora marcada", ShieldCheck, "Seu pedido fica registrado com seguranca."],
+            ["Contato direto", MessageCircle, "Fale com a equipe quando precisar tirar duvidas."]
+          ].map(([label, Icon, text]) => (
+            <div key={String(label)} className="rounded-[1.5rem] border border-[var(--store-border)] bg-white p-5 shadow-sm">
+              <Icon className="h-6 w-6 text-[var(--store-primary)]" />
               <p className="mt-4 font-black">{String(label)}</p>
-              <p className="mt-1 text-sm text-[var(--store-muted)]">Informacao apresentada sem estatisticas inventadas.</p>
+              <p className="mt-1 text-sm leading-6 text-[var(--store-muted)]">{String(text)}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
-        <div className="mb-5 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--store-primary)]">Galeria</p>
-            <h2 className="mt-1 text-3xl font-black tracking-tight">Veja o espaco e o portfolio</h2>
+      {gallery.length ? (
+        <section id="galeria" className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--store-primary)]">Galeria</p>
+              <h2 className="mt-1 text-3xl font-black tracking-tight">Conheca mais de perto</h2>
+            </div>
           </div>
-        </div>
-        {gallery.length ? (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {gallery.map((item, index) => (
               <button
@@ -931,45 +955,38 @@ export function PublicStorefront({
               </button>
             ))}
           </div>
-        ) : (
-          <div className="rounded-[1.7rem] border border-dashed border-[var(--store-border)] bg-white p-8 text-center text-[var(--store-muted)]">
-            <ImageIcon className="mx-auto mb-3 h-8 w-8 text-[var(--store-primary)]" />
-            A galeria ainda nao tem imagens publicadas.
-          </div>
-        )}
-      </section>
+        </section>
+      ) : null}
 
-      <section id="contato" className="mx-auto max-w-7xl px-5 pb-28 pt-8 lg:px-8 lg:pb-10">
-        <div className="rounded-[var(--store-radius)] border border-[var(--store-border)] bg-white p-6 shadow-[var(--store-shadow)]">
-          <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--store-primary)]">Contato</p>
-              <h2 className="mt-1 text-3xl font-black">Fale com {showcase.title}</h2>
-              {address ? <p className="mt-3 text-sm leading-6 text-[var(--store-muted)]">{address}</p> : null}
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {primaryLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.url}
-                  target={link.url.startsWith("http") ? "_blank" : undefined}
-                  rel={link.url.startsWith("http") ? "noreferrer" : undefined}
-                  className="flex min-h-14 items-center justify-between rounded-2xl border border-[var(--store-border)] px-4 font-black"
-                >
-                  <span className="flex items-center gap-2">
-                    <link.icon className="h-5 w-5 text-[var(--store-primary)]" />
-                    {link.label}
-                  </span>
-                  <ExternalLink className="h-4 w-4 text-[var(--store-muted)]" />
-                </a>
-              ))}
-              {links.map((link) => {
-                const url = safeExternalUrl(link.url);
-                if (!url) return null;
-                return (
+      {hasContact ? (
+        <section id="contato" className="mx-auto max-w-7xl px-5 pb-28 pt-8 lg:px-8 lg:pb-10">
+          <div className="rounded-[var(--store-radius)] border border-[var(--store-border)] bg-white p-6 shadow-[var(--store-shadow)]">
+            <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--store-primary)]">Contato</p>
+                <h2 className="mt-1 text-3xl font-black">Fale com {showcase.title}</h2>
+                {address ? <p className="mt-3 text-sm leading-6 text-[var(--store-muted)]">{address}</p> : null}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {primaryLinks.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.url}
+                    target={link.url.startsWith("http") ? "_blank" : undefined}
+                    rel={link.url.startsWith("http") ? "noreferrer" : undefined}
+                    className="flex min-h-14 items-center justify-between rounded-2xl border border-[var(--store-border)] px-4 font-black"
+                  >
+                    <span className="flex items-center gap-2">
+                      <link.icon className="h-5 w-5 text-[var(--store-primary)]" />
+                      {link.label}
+                    </span>
+                    <ExternalLink className="h-4 w-4 text-[var(--store-muted)]" />
+                  </a>
+                ))}
+                {safeLinks.map((link) => (
                   <a
                     key={link.id}
-                    href={url}
+                    href={link.url}
                     target="_blank"
                     rel="noreferrer"
                     className="flex min-h-14 items-center justify-between rounded-2xl border border-[var(--store-border)] px-4 font-black"
@@ -980,19 +997,14 @@ export function PublicStorefront({
                     </span>
                     <ExternalLink className="h-4 w-4 text-[var(--store-muted)]" />
                   </a>
-                );
-              })}
-              {primaryLinks.length === 0 && links.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-[var(--store-border)] bg-[var(--store-bg)] p-5 text-sm text-[var(--store-muted)] sm:col-span-2">
-                  Os canais de contato ainda nao foram configurados.
-                </div>
-              ) : null}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 grid grid-cols-4 border-t border-[var(--store-border)] bg-white/96 px-3 pb-[env(safe-area-inset-bottom)] text-[11px] font-black text-[var(--store-muted)] shadow-[0_-14px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 grid grid-cols-5 border-t border-[var(--store-border)] bg-white/96 px-2 pb-[env(safe-area-inset-bottom)] text-[10px] font-black text-[var(--store-muted)] shadow-[0_-14px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden">
         <a href="#inicio" className="flex min-h-16 flex-col items-center justify-center gap-1 text-[var(--store-primary)]">
           <Store className="h-5 w-5" />
           Inicio
@@ -1001,11 +1013,28 @@ export function PublicStorefront({
           <Sparkles className="h-5 w-5" />
           Servicos
         </a>
-        <a href="#avaliacoes" className="flex min-h-16 flex-col items-center justify-center gap-1">
-          <Star className="h-5 w-5" />
-          Avaliacoes
-        </a>
-        <a href="#contato" className="flex min-h-16 flex-col items-center justify-center gap-1">
+        <button
+          type="button"
+          onClick={() => openBooking()}
+          className="-mt-5 flex min-h-20 flex-col items-center justify-center gap-1 text-[var(--store-primary)]"
+        >
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--store-primary)] text-[var(--store-primary-contrast)] shadow-lg">
+            <CalendarDays className="h-6 w-6" />
+          </span>
+          Agendar
+        </button>
+        {gallery.length ? (
+          <a href="#galeria" className="flex min-h-16 flex-col items-center justify-center gap-1">
+            <Heart className="h-5 w-5" />
+            Galeria
+          </a>
+        ) : (
+          <a href="#servicos" className="flex min-h-16 flex-col items-center justify-center gap-1">
+            <ImageIcon className="h-5 w-5" />
+            Fotos
+          </a>
+        )}
+        <a href={hasContact ? "#contato" : "#inicio"} className="flex min-h-16 flex-col items-center justify-center gap-1">
           <Phone className="h-5 w-5" />
           Contato
         </a>
