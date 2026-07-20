@@ -644,8 +644,11 @@ export function PublicStorefront({
   const [previewImage, setPreviewImage] = useState<GalleryItem | null>(null);
   const style = resolveShowcaseTheme(showcase);
   const fontClass = getFontClass(showcase.font_key);
-  const heroImage = showcase.hero_image_url || organization.cover_url;
   const logoUrl = showcase.logo_url || organization.logo_url;
+  const firstServiceImage = services.find((service) => service.image_url)?.image_url;
+  const configuredHeroImage = showcase.hero_image_url?.includes("encrypted-tbn") ? null : showcase.hero_image_url;
+  const heroPhoto = configuredHeroImage || firstServiceImage;
+  const softenHeroPhoto = false;
   const address =
     showcase.address_text || [organization.address, organization.city, organization.state].filter(Boolean).join(", ");
   const whatsapp = whatsappUrl(showcase.whatsapp || organization.whatsapp, `Ola! Quero agendar pela vitrine ${showcase.title}.`);
@@ -673,7 +676,7 @@ export function PublicStorefront({
 
   return (
     <main style={style} className={`${fontClass} min-h-screen bg-[var(--store-bg)] text-[var(--store-text)]`}>
-      <header className="sticky top-0 z-40 bg-white/92 shadow-[0_10px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-5 py-3 lg:px-8">
           <a href="#inicio" className="flex min-w-0 items-center gap-3">
             {logoUrl ? (
@@ -685,7 +688,7 @@ export function PublicStorefront({
               </span>
             )}
             <span className="min-w-0">
-              <strong className="block truncate text-xl font-black text-[var(--store-primary)] sm:text-base">{showcase.title}</strong>
+              <strong className="block truncate text-xl font-black text-[var(--store-text)] sm:text-base">{showcase.title}</strong>
               <span className="block truncate text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--store-muted)]">Vitrine digital</span>
             </span>
           </a>
@@ -721,51 +724,55 @@ export function PublicStorefront({
         </div>
       </header>
 
-      <section id="inicio" className="mx-auto grid max-w-7xl gap-6 px-5 pb-6 pt-5 lg:grid-cols-[minmax(0,1.05fr)_430px] lg:px-8 lg:pb-12 lg:pt-8">
-        <div className="overflow-hidden rounded-[2rem] border border-[var(--store-border)] bg-white shadow-[var(--store-shadow)]">
-          <div className="relative min-h-[660px] overflow-hidden lg:grid lg:min-h-[560px] lg:grid-cols-[0.92fr_1fr]">
-            <div className="pointer-events-none absolute bottom-0 right-0 top-20 w-[70%] overflow-hidden lg:relative lg:inset-auto lg:top-auto lg:w-auto">
-              {heroImage ? (
+      <section id="inicio" className="mx-auto grid max-w-7xl gap-6 px-5 pb-4 pt-2 lg:grid-cols-[minmax(0,1.05fr)_430px] lg:px-8 lg:pb-12 lg:pt-8">
+        <div className="overflow-hidden rounded-b-[2.2rem] bg-white lg:rounded-[2rem] lg:border lg:border-[var(--store-border)] lg:shadow-[var(--store-shadow)]">
+          <div className="relative overflow-hidden bg-gradient-to-br from-white via-white to-[var(--store-bg-soft)] lg:grid lg:min-h-[560px] lg:grid-cols-[0.92fr_1fr]">
+            <div className="pointer-events-none absolute bottom-0 right-0 top-0 w-[58%] overflow-hidden lg:relative lg:inset-auto lg:top-auto lg:w-auto">
+              {heroPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={heroImage} alt="" className="h-full w-full object-cover object-center" fetchPriority="high" />
+                <img
+                  src={heroPhoto}
+                  alt=""
+                  className={`h-full w-full object-cover object-center ${softenHeroPhoto ? "opacity-20 lg:opacity-80" : ""}`}
+                  fetchPriority="high"
+                />
               ) : (
                 <div className="flex h-full min-h-[320px] items-center justify-center bg-[var(--store-bg-soft)]">
-                  <Store className="h-20 w-20 text-[var(--store-primary)] opacity-40" />
+                  {logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={logoUrl} alt="" className="h-36 w-36 rounded-full object-contain opacity-[0.04]" />
+                  ) : (
+                    <Store className="h-20 w-20 text-[var(--store-primary)] opacity-20" />
+                  )}
                 </div>
               )}
-              <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-white via-white/80 to-transparent lg:hidden" />
-              <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-white via-white/80 to-transparent lg:hidden" />
+              <div className="absolute inset-y-0 left-0 w-3/4 bg-gradient-to-r from-white via-white/80 to-transparent lg:hidden" />
+              <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-white via-white/85 to-transparent lg:hidden" />
             </div>
-            <div className="relative z-10 flex min-h-[660px] max-w-[72%] flex-col justify-between p-6 pr-0 sm:max-w-[62%] sm:p-9 lg:min-h-[560px] lg:max-w-none lg:pr-9">
+            <div className="relative z-10 flex max-w-[76%] flex-col justify-center px-7 py-8 pr-0 sm:max-w-[62%] sm:p-9 lg:min-h-[560px] lg:max-w-none lg:justify-between lg:pr-9">
               <div>
-                <div className="mb-5 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap">
-                  <span className="inline-flex items-center gap-2 rounded-xl bg-white/90 px-3 py-2 text-xs font-black text-[var(--store-primary)] shadow-sm ring-1 ring-[var(--store-border)]">
-                    <ShieldCheck className="h-4 w-4" />
-                    Atendimento verificado
-                  </span>
-                  {address ? (
-                    <span className="inline-flex max-w-full items-center gap-2 rounded-xl bg-white/90 px-3 py-2 text-xs font-bold text-[var(--store-muted)] shadow-sm ring-1 ring-[var(--store-border)]">
-                      <MapPin className="h-4 w-4" />
-                      <span className="truncate">{address}</span>
-                    </span>
-                  ) : null}
-                </div>
                 <div className="mb-4 inline-flex items-center gap-1 rounded-xl bg-white/90 px-3 py-2 text-xs font-black text-[var(--store-text)] shadow-sm ring-1 ring-[var(--store-border)]">
                   <Star className="h-4 w-4 fill-[var(--store-primary)] text-[var(--store-primary)]" />
                   4,9 <span className="text-yellow-400">★★★★★</span>
                 </div>
-                <h1 className="max-w-sm text-[2.55rem] font-black leading-[0.98] tracking-tight text-[var(--store-text)] sm:max-w-xl sm:text-6xl">
+                <h1 className="max-w-sm text-[2rem] font-black leading-[1.03] tracking-tight text-[var(--store-text)] sm:max-w-xl sm:text-6xl">
                   {showcase.subtitle || `Agende com ${showcase.title}`}
                 </h1>
-                <p className="mt-5 max-w-xs text-sm font-medium leading-6 text-[var(--store-muted)] sm:max-w-xl sm:text-lg sm:leading-7">
+                <p className="mt-4 max-w-[15.5rem] text-[13px] font-medium leading-6 text-[var(--store-muted)] sm:max-w-xl sm:text-lg sm:leading-7">
                   {showcase.description || organization.description || "Escolha o servico, veja horarios e fale com a equipe em poucos toques."}
                 </p>
+                {address ? (
+                  <p className="mt-4 hidden max-w-xl items-center gap-2 text-xs font-bold text-[var(--store-muted)] lg:flex">
+                    <MapPin className="h-4 w-4 text-[var(--store-primary)]" />
+                    {address}
+                  </p>
+                ) : null}
               </div>
-              <div className="mt-8 grid max-w-sm gap-3">
+              <div className="mt-6 grid max-w-xs gap-3 sm:max-w-sm">
                 <button
                   type="button"
                   onClick={() => openBooking()}
-                  className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl bg-[var(--store-primary)] px-6 text-sm font-black text-[var(--store-primary-contrast)] shadow-xl sm:text-base"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[var(--store-primary)] px-6 text-sm font-black text-[var(--store-primary-contrast)] shadow-xl sm:min-h-14 sm:text-base"
                 >
                   <CalendarDays className="h-5 w-5" />
                   Agendar agora
@@ -775,7 +782,7 @@ export function PublicStorefront({
                     href={whatsapp}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl border border-[var(--store-primary)] bg-white/95 px-6 text-sm font-black text-[var(--store-primary)] shadow-sm sm:text-base"
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[var(--store-primary)] bg-white/95 px-6 text-sm font-black text-[var(--store-primary)] shadow-sm sm:min-h-14 sm:text-base"
                   >
                     <MessageCircle className="h-5 w-5" />
                     Falar no WhatsApp
@@ -786,7 +793,7 @@ export function PublicStorefront({
           </div>
         </div>
 
-        <aside className="rounded-[var(--store-radius)] border border-[var(--store-border)] bg-white p-5 shadow-[var(--store-shadow)] lg:sticky lg:top-24 lg:self-start">
+        <aside className="hidden rounded-[var(--store-radius)] border border-[var(--store-border)] bg-white p-5 shadow-[var(--store-shadow)] lg:sticky lg:top-24 lg:block lg:self-start">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--store-bg-soft)] text-[var(--store-primary)]">
               <CalendarDays className="h-6 w-6" />
@@ -827,7 +834,7 @@ export function PublicStorefront({
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--store-primary)]">Nossos servicos</p>
-            <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-4xl">Escolha o melhor atendimento</h2>
+            <h2 className="mt-1 hidden text-2xl font-black tracking-tight sm:block sm:text-4xl">Escolha o melhor atendimento</h2>
           </div>
           <a href="#servicos" className="shrink-0 text-xs font-black text-[var(--store-primary)] sm:text-sm">
             Ver todos
