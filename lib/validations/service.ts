@@ -22,6 +22,8 @@ export const serviceSchema = z.object({
   description: z.string().optional(),
   imageUrl: z.string().url("Informe uma URL de imagem valida.").optional().or(z.literal("")),
   durationMinutes: z.coerce.number().int().positive().default(60),
+  marginBeforeMinutes: z.coerce.number().int().min(0).default(0),
+  marginAfterMinutes: z.coerce.number().int().min(0).default(10),
   priceCents: z.preprocess(priceToCents, z.number().int().min(0).default(0)),
   isOnline: z.coerce.boolean().default(true)
 });

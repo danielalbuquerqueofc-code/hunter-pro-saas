@@ -86,9 +86,6 @@ export default async function PublicShowcasePage({ params }: PublicShowcasePageP
       professionals={data.professionals}
       links={data.links}
       gallery={data.gallery}
-      availabilityRules={data.availabilityRules}
-      appointments={data.appointments}
-      blockedTimes={data.blockedTimes}
     />
   );
 }

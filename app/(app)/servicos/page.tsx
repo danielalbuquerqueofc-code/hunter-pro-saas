@@ -52,6 +52,9 @@ export default async function ServicosPage() {
                             Tempo: {service.duration_minutes} min
                           </span>
                           <span className="rounded-full bg-zinc-100 px-3 py-1 font-semibold text-zinc-700">
+                            Bloqueio total: {service.duration_minutes + (service.margin_before_minutes ?? 0) + (service.margin_after_minutes ?? 10)} min
+                          </span>
+                          <span className="rounded-full bg-zinc-100 px-3 py-1 font-semibold text-zinc-700">
                             Valor: {formatCurrency(service.price_cents)}
                           </span>
                           <span className="rounded-full bg-zinc-100 px-3 py-1 font-semibold text-zinc-700">
@@ -121,6 +124,30 @@ export default async function ServicosPage() {
                               defaultValue={(service.price_cents / 100).toFixed(2)}
                             />
                             <p className="text-xs text-zinc-500">Em reais.</p>
+                          </div>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label htmlFor={`margin-before-${service.id}`}>Margem antes</Label>
+                            <Input
+                              id={`margin-before-${service.id}`}
+                              name="marginBeforeMinutes"
+                              type="number"
+                              min={0}
+                              defaultValue={service.margin_before_minutes ?? 0}
+                            />
+                            <p className="text-xs text-zinc-500">Bloqueada internamente antes do atendimento.</p>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor={`margin-after-${service.id}`}>Margem depois</Label>
+                            <Input
+                              id={`margin-after-${service.id}`}
+                              name="marginAfterMinutes"
+                              type="number"
+                              min={0}
+                              defaultValue={service.margin_after_minutes ?? 10}
+                            />
+                            <p className="text-xs text-zinc-500">Padrao recomendado: 10 minutos.</p>
                           </div>
                         </div>
                         <label className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white p-3 text-sm font-semibold text-zinc-700">

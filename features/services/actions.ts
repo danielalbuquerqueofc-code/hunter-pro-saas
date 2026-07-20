@@ -64,6 +64,8 @@ export async function createServiceAction(formData: FormData) {
     description: formData.get("description"),
     imageUrl: formData.get("imageUrl"),
     durationMinutes: formData.get("durationMinutes"),
+    marginBeforeMinutes: formData.get("marginBeforeMinutes"),
+    marginAfterMinutes: formData.get("marginAfterMinutes"),
     priceCents: formData.get("priceCents"),
     isOnline: formData.get("isOnline") === "on"
   });
@@ -78,6 +80,8 @@ export async function createServiceAction(formData: FormData) {
     description: parsed.data.description || null,
     image_url: parsed.data.imageUrl || null,
     duration_minutes: parsed.data.durationMinutes,
+    margin_before_minutes: parsed.data.marginBeforeMinutes,
+    margin_after_minutes: parsed.data.marginAfterMinutes,
     price_cents: parsed.data.priceCents,
     is_online: parsed.data.isOnline
   });
@@ -134,6 +138,8 @@ export async function createServiceStateAction(
     description: formData.get("description"),
     imageUrl: formData.get("imageUrl"),
     durationMinutes: formData.get("durationMinutes"),
+    marginBeforeMinutes: formData.get("marginBeforeMinutes"),
+    marginAfterMinutes: formData.get("marginAfterMinutes"),
     priceCents: formData.get("priceCents"),
     isOnline: formData.get("isOnline") === "on"
   });
@@ -150,6 +156,8 @@ export async function createServiceStateAction(
     description: parsed.data.description || null,
     image_url: parsed.data.imageUrl || null,
     duration_minutes: parsed.data.durationMinutes,
+    margin_before_minutes: parsed.data.marginBeforeMinutes,
+    margin_after_minutes: parsed.data.marginAfterMinutes,
     price_cents: parsed.data.priceCents,
     is_online: parsed.data.isOnline
   });
@@ -178,6 +186,8 @@ export async function updateServiceAction(formData: FormData) {
     description: formData.get("description"),
     imageUrl: formData.get("imageUrl"),
     durationMinutes: formData.get("durationMinutes"),
+    marginBeforeMinutes: formData.get("marginBeforeMinutes"),
+    marginAfterMinutes: formData.get("marginAfterMinutes"),
     priceCents: formData.get("priceCents"),
     isOnline: formData.get("isOnline") === "on"
   });
@@ -193,6 +203,8 @@ export async function updateServiceAction(formData: FormData) {
       description: parsed.data.description || null,
       image_url: parsed.data.imageUrl || null,
       duration_minutes: parsed.data.durationMinutes,
+      margin_before_minutes: parsed.data.marginBeforeMinutes,
+      margin_after_minutes: parsed.data.marginAfterMinutes,
       price_cents: parsed.data.priceCents,
       is_online: parsed.data.isOnline,
       updated_at: new Date().toISOString()

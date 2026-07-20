@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   ArrowLeft,
@@ -39,6 +39,13 @@ type Organization = {
   address: string | null;
   city: string | null;
   state: string | null;
+  timezone?: string | null;
+  default_appointment_margin_minutes?: number | null;
+  booking_min_notice_minutes?: number | null;
+  booking_max_days_ahead?: number | null;
+  booking_slot_interval_minutes?: number | null;
+  booking_slot_mode?: "FIXED_GRID" | "SEQUENTIAL_BLOCKS" | null;
+  booking_confirmation_mode?: "AUTOMATIC" | "MANUAL" | null;
 };
 
 type Showcase = {
@@ -67,12 +74,18 @@ type Service = {
   duration_minutes: number;
   price_cents: number;
   is_online?: boolean | null;
+  margin_before_minutes?: number | null;
+  margin_after_minutes?: number | null;
+  booking_min_notice_minutes?: number | null;
+  booking_max_days_ahead?: number | null;
 };
 
 type Professional = {
   id: string;
   name: string;
   bio: string | null;
+  appointment_margin_minutes?: number | null;
+  booking_slot_interval_minutes?: number | null;
 };
 
 type ShowcaseLink = {
@@ -87,29 +100,6 @@ type GalleryItem = {
   alt_text: string | null;
 };
 
-type AvailabilityRule = {
-  id: string;
-  professional_id: string | null;
-  weekday: number;
-  start_time: string;
-  end_time: string;
-};
-
-type Appointment = {
-  id: string;
-  professional_id: string | null;
-  starts_at: string;
-  ends_at: string;
-  status: string;
-};
-
-type BlockedTime = {
-  id: string;
-  professional_id: string | null;
-  starts_at: string;
-  ends_at: string;
-};
-
 type PublicStorefrontProps = {
   organization: Organization;
   showcase: Showcase;
@@ -117,12 +107,17 @@ type PublicStorefrontProps = {
   professionals: Professional[];
   links: ShowcaseLink[];
   gallery: GalleryItem[];
-  availabilityRules: AvailabilityRule[];
-  appointments: Appointment[];
-  blockedTimes: BlockedTime[];
 };
 
-const defaultTimes = ["09:00", "10:30", "14:00", "16:00"];
+type ApiSlot = {
+  time: string;
+  startsAt: string;
+  endsAt: string;
+  occupiedStartsAt: string;
+  occupiedEndsAt: string;
+  professionalId: string;
+  professionalName: string;
+};
 
 function initials(value: string) {
   return value
@@ -167,21 +162,6 @@ function toDateInput(date: Date) {
   return local.toISOString().slice(0, 10);
 }
 
-function parseMinutes(value: string) {
-  const [hour, minute] = value.slice(0, 5).split(":").map(Number);
-  return hour * 60 + minute;
-}
-
-function formatTime(minutes: number) {
-  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-}
-
-function overlaps(start: Date, end: Date, busyStart: string, busyEnd: string) {
-  const busyStartDate = new Date(busyStart);
-  const busyEndDate = new Date(busyEnd);
-  return start < busyEndDate && end > busyStartDate;
-}
-
 function buildDates() {
   return Array.from({ length: 14 }, (_, index) => {
     const date = new Date();
@@ -191,64 +171,6 @@ function buildDates() {
       label: index === 0 ? "Hoje" : date.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", ""),
       day: date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })
     };
-  });
-}
-
-function buildSlots({
-  date,
-  service,
-  professionalId,
-  rules,
-  appointments,
-  blockedTimes
-}: {
-  date: string;
-  service: Service | undefined;
-  professionalId: string;
-  rules: AvailabilityRule[];
-  appointments: Appointment[];
-  blockedTimes: BlockedTime[];
-}) {
-  const selectedDate = new Date(`${date}T12:00:00`);
-  const weekday = selectedDate.getDay();
-  const duration = service?.duration_minutes ?? 60;
-  const scopedRules = rules.filter((rule) => {
-    const professionalMatches = !professionalId || !rule.professional_id || rule.professional_id === professionalId;
-    return rule.weekday === weekday && professionalMatches;
-  });
-
-  const candidates = scopedRules.length
-    ? scopedRules.flatMap((rule) => {
-        const start = parseMinutes(rule.start_time);
-        const end = parseMinutes(rule.end_time);
-        const times: string[] = [];
-        for (let current = start; current + duration <= end; current += Math.max(30, duration)) {
-          times.push(formatTime(current));
-        }
-        return times;
-      })
-    : defaultTimes;
-
-  const uniqueTimes = Array.from(new Set(candidates)).sort();
-  const now = new Date();
-
-  return uniqueTimes.filter((time) => {
-    const startsAt = new Date(`${date}T${time}:00`);
-    const endsAt = new Date(startsAt);
-    endsAt.setMinutes(endsAt.getMinutes() + duration);
-    if (startsAt <= now) return false;
-
-    const busyAppointments = appointments.some((appointment) => {
-      const professionalMatches = !professionalId || !appointment.professional_id || appointment.professional_id === professionalId;
-      return professionalMatches && overlaps(startsAt, endsAt, appointment.starts_at, appointment.ends_at);
-    });
-
-    const blocked = blockedTimes.some((blockedTime) => {
-      const professionalMatches = !professionalId || !blockedTime.professional_id || blockedTime.professional_id === professionalId;
-      return professionalMatches && overlaps(startsAt, endsAt, blockedTime.starts_at, blockedTime.ends_at);
-    });
-
-    return !busyAppointments && !blocked;
   });
 }
 
@@ -289,6 +211,7 @@ function ServiceMedia({ service, index, compact = false }: { service: Service; i
 }
 
 function BookingDialog({
+  slug,
   open,
   onClose,
   organization,
@@ -296,11 +219,9 @@ function BookingDialog({
   professionals,
   selectedServiceId,
   setSelectedServiceId,
-  availabilityRules,
-  appointments,
-  blockedTimes,
   whatsapp
 }: {
+  slug: string;
   open: boolean;
   onClose: () => void;
   organization: Organization;
@@ -308,9 +229,6 @@ function BookingDialog({
   professionals: Professional[];
   selectedServiceId: string;
   setSelectedServiceId: (value: string) => void;
-  availabilityRules: AvailabilityRule[];
-  appointments: Appointment[];
-  blockedTimes: BlockedTime[];
   whatsapp: string;
 }) {
   const dates = useMemo(() => buildDates(), []);
@@ -322,20 +240,44 @@ function BookingDialog({
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [notes, setNotes] = useState("");
+  const [slots, setSlots] = useState<ApiSlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState("");
+  const [hold, setHold] = useState<{ holdId: string; sessionToken: string; expiresAt: string } | null>(null);
+  const [holdError, setHoldError] = useState("");
   const selectedService = services.find((service) => service.id === selectedServiceId) ?? services[0];
 
-  const slots = useMemo(
-    () =>
-      buildSlots({
-        date,
-        service: selectedService,
-        professionalId,
-        rules: availabilityRules,
-        appointments,
-        blockedTimes
-      }),
-    [appointments, availabilityRules, blockedTimes, date, professionalId, selectedService]
-  );
+  const loadSlots = useCallback(async (signal?: AbortSignal) => {
+    if (!selectedService?.id || !date) return;
+    const params = new URLSearchParams({ slug, serviceId: selectedService.id, date });
+    if (professionalId) params.set("professionalId", professionalId);
+
+    setSlotsLoading(true);
+    setSlotsError("");
+
+    try {
+      const response = await fetch(`/api/public/availability?${params.toString()}`, { signal });
+      const payload = await response.json();
+      if (!response.ok || !payload.ok) throw new Error(payload.error || "Nao foi possivel carregar horarios.");
+      setSlots(payload.slots ?? []);
+    } catch (error) {
+      if (error instanceof Error && error.name !== "AbortError") setSlotsError(error.message);
+    } finally {
+      setSlotsLoading(false);
+    }
+  }, [date, professionalId, selectedService, slug]);
+
+  useEffect(() => {
+    if (!open || !selectedService?.id || !date) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      void loadSlots(controller.signal);
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [loadSlots, date, open, selectedService?.id]);
 
   if (!open) return null;
 
@@ -344,9 +286,13 @@ function BookingDialog({
     (step === 2 && Boolean(date && time)) ||
     (step === 3 && customerName.trim().length > 1 && customerPhone.replace(/\D/g, "").length >= 8);
 
+  const selectedSlot = slots.find((slot) => slot.time === time);
+  const resolvedProfessionalName =
+    selectedSlot?.professionalName || professionals.find((professional) => professional.id === professionalId)?.name || "Qualquer profissional";
+
   const summaryRows = [
     ["Servico", selectedService?.name ?? "A escolher"],
-    ["Profissional", professionals.find((professional) => professional.id === professionalId)?.name ?? "Qualquer profissional"],
+    ["Profissional", resolvedProfessionalName],
     ["Data", date ? new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR") : "A escolher"],
     ["Horario", time || "A escolher"],
     ["Cliente", customerName || "Nao informado"]
@@ -393,6 +339,8 @@ function BookingDialog({
           <input type="hidden" name="professionalId" value={professionalId} />
           <input type="hidden" name="date" value={date} />
           <input type="hidden" name="time" value={time} />
+          <input type="hidden" name="holdId" value={hold?.holdId ?? ""} />
+          <input type="hidden" name="sessionToken" value={hold?.sessionToken ?? ""} />
           <input type="hidden" name="customerName" value={customerName} />
           <input type="hidden" name="customerPhone" value={customerPhone} />
           <input type="hidden" name="customerEmail" value={customerEmail} />
@@ -410,6 +358,7 @@ function BookingDialog({
                   onChange={(event) => {
                     setSelectedServiceId(event.target.value);
                     setTime("");
+                    setHold(null);
                   }}
                   className="mt-2 h-14 w-full rounded-2xl border border-[var(--store-border)] bg-white px-4 text-sm font-bold text-[var(--store-text)] outline-none focus:border-[var(--store-primary)]"
                 >
@@ -440,6 +389,7 @@ function BookingDialog({
                   onChange={(event) => {
                     setProfessionalId(event.target.value);
                     setTime("");
+                    setHold(null);
                   }}
                   className="mt-2 h-14 w-full rounded-2xl border border-[var(--store-border)] bg-white px-4 text-sm font-bold text-[var(--store-text)] outline-none focus:border-[var(--store-primary)]"
                 >
@@ -466,6 +416,7 @@ function BookingDialog({
                       onClick={() => {
                         setDate(item.value);
                         setTime("");
+                        setHold(null);
                       }}
                       className={`rounded-2xl border px-2 py-3 text-center transition ${
                         date === item.value
@@ -481,23 +432,40 @@ function BookingDialog({
               </div>
               <div>
                 <p className="text-sm font-black text-[var(--store-text)]">Horarios disponiveis</p>
-                <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
-                  {slots.map((slot) => (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => setTime(slot)}
-                      className={`min-h-12 rounded-2xl border text-sm font-black transition ${
-                        time === slot
-                          ? "border-[var(--store-primary)] bg-[var(--store-primary)] text-[var(--store-primary-contrast)]"
-                          : "border-[var(--store-border)] bg-white text-[var(--store-text)]"
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  ))}
-                </div>
-                {slots.length === 0 ? (
+                {slotsLoading ? (
+                  <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5" aria-label="Carregando horarios">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <span key={index} className="h-12 animate-pulse rounded-2xl bg-slate-100" />
+                    ))}
+                  </div>
+                ) : null}
+                {!slotsLoading && slotsError ? (
+                  <div className="mt-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
+                    {slotsError}
+                  </div>
+                ) : null}
+                {!slotsLoading && !slotsError ? (
+                  <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                    {slots.map((slot) => (
+                      <button
+                        key={`${slot.time}-${slot.professionalId}`}
+                        type="button"
+                        onClick={() => {
+                          setTime(slot.time);
+                          setHold(null);
+                        }}
+                        className={`min-h-12 rounded-2xl border text-sm font-black transition ${
+                          time === slot.time
+                            ? "border-[var(--store-primary)] bg-[var(--store-primary)] text-[var(--store-primary-contrast)]"
+                            : "border-[var(--store-border)] bg-white text-[var(--store-text)]"
+                        }`}
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                {!slotsLoading && !slotsError && slots.length === 0 ? (
                   <div className="mt-3 rounded-2xl border border-dashed border-[var(--store-border)] bg-[var(--store-bg)] p-4 text-sm text-[var(--store-muted)]">
                     Nenhum horario livre para esta data. Escolha outro dia ou fale pelo WhatsApp.
                   </div>
@@ -546,6 +514,12 @@ function BookingDialog({
                   placeholder="Conte rapidamente o que voce precisa"
                 />
               </label>
+              <label className="flex items-start gap-3 rounded-2xl border border-[var(--store-border)] bg-[var(--store-bg)] p-4 text-sm leading-5 text-[var(--store-muted)]">
+                <input name="consentWhatsapp" type="checkbox" defaultChecked className="mt-1" />
+                <span>
+                  Autorizo o uso do WhatsApp informado para receber confirmacao e lembretes deste agendamento. Isso nao autoriza campanhas promocionais.
+                </span>
+              </label>
             </div>
           ) : null}
 
@@ -568,6 +542,15 @@ function BookingDialog({
                   ))}
                 </dl>
               </div>
+              {hold ? (
+                <p className="rounded-2xl bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
+                  Horario reservado temporariamente ate{" "}
+                  {new Date(hold.expiresAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.
+                </p>
+              ) : null}
+              {holdError ? (
+                <p className="rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">{holdError}</p>
+              ) : null}
               {whatsapp ? (
                 <a
                   href={whatsapp}
@@ -587,7 +570,44 @@ function BookingDialog({
               <button
                 type="button"
                 disabled={!canGoNext}
-                onClick={() => setStep((current) => Math.min(4, current + 1))}
+                onClick={async () => {
+                  if (step === 3) {
+                    setHoldError("");
+                    const slot = selectedSlot;
+                    if (!slot) {
+                      setHoldError("Escolha novamente um horario disponivel.");
+                      setStep(2);
+                      return;
+                    }
+
+                    const response = await fetch("/api/public/holds", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        slug,
+                        serviceId: selectedService?.id,
+                        professionalId: slot.professionalId,
+                        date,
+                        time
+                      })
+                    });
+                    const payload = await response.json();
+
+                    if (!response.ok || !payload.ok) {
+                      setHoldError(payload.error || "Esse horario nao esta mais disponivel.");
+                      setStep(2);
+                      return;
+                    }
+
+                    setProfessionalId(slot.professionalId);
+                    setHold({
+                      holdId: payload.hold_id,
+                      sessionToken: payload.session_token,
+                      expiresAt: payload.expires_at
+                    });
+                  }
+                  setStep((current) => Math.min(4, current + 1));
+                }}
                 className="min-h-14 rounded-2xl bg-[var(--store-primary)] px-5 text-base font-black text-[var(--store-primary-contrast)] shadow-lg transition disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Continuar
@@ -611,10 +631,7 @@ export function PublicStorefront({
   services,
   professionals,
   links,
-  gallery,
-  availabilityRules,
-  appointments,
-  blockedTimes
+  gallery
 }: PublicStorefrontProps) {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState(services[0]?.id ?? "");
@@ -987,6 +1004,7 @@ export function PublicStorefront({
       </nav>
 
       <BookingDialog
+        slug={organization.slug}
         open={bookingOpen}
         onClose={() => setBookingOpen(false)}
         organization={organization}
@@ -994,9 +1012,6 @@ export function PublicStorefront({
         professionals={professionals}
         selectedServiceId={selectedServiceId}
         setSelectedServiceId={setSelectedServiceId}
-        availabilityRules={availabilityRules}
-        appointments={appointments}
-        blockedTimes={blockedTimes}
         whatsapp={whatsapp}
       />
 

@@ -88,6 +88,18 @@ export function ServiceForms({ categories }: { categories: Category[] }) {
                 <p className="text-xs text-zinc-500">Em reais. Ex.: 120,00.</p>
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="marginBeforeMinutes">Margem antes</Label>
+                <Input id="marginBeforeMinutes" name="marginBeforeMinutes" type="number" defaultValue={0} min={0} />
+                <p className="text-xs text-zinc-500">Tempo bloqueado antes do atendimento.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="marginAfterMinutes">Margem depois</Label>
+                <Input id="marginAfterMinutes" name="marginAfterMinutes" type="number" defaultValue={10} min={0} />
+                <p className="text-xs text-zinc-500">Padrao: 10 minutos entre atendimentos.</p>
+              </div>
+            </div>
             <label className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white p-3 text-sm font-semibold text-zinc-700">
               <input name="isOnline" type="checkbox" defaultChecked />
               Atendimento online
