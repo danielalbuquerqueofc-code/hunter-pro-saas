@@ -12,7 +12,9 @@ export async function getPlatformOrganizations(filters: PlatformOrganizationFilt
   const [
     { data: organizations },
     { data: members },
+    { data: pendingInvitations },
     { data: subscriptions },
+    { data: plans },
     { data: contacts },
     { data: appointments },
     { data: recentAuditLogs }
@@ -25,11 +27,23 @@ export async function getPlatformOrganizations(filters: PlatformOrganizationFilt
     supabase
       .from("organization_members")
       .select("organization_id,id,status")
-      .eq("status", "ACTIVE"),
+      .in("status", ["ACTIVE", "INVITED"]),
+    supabase
+      .from("organization_invitations")
+      .select("organization_id,id")
+      .eq("status", "SENT")
+      .is("invited_user_id", null)
+      .gt("expires_at", new Date().toISOString()),
     supabase
       .from("subscriptions")
-      .select("organization_id,status,current_period_end,plan:plans(name,price_cents)")
+      .select("organization_id,status,current_period_end,billing_provider,asaas_status,plan:plans(id,code,name,price_cents,monthly_price,maximum_users,minimum_users)")
       .order("created_at", { ascending: false }),
+    supabase
+      .from("plans")
+      .select("id,code,name,monthly_price,price_cents,minimum_users,maximum_users,display_order")
+      .eq("status", "active")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true }),
     supabase
       .from("contacts")
       .select("organization_id,id"),
@@ -48,6 +62,12 @@ export async function getPlatformOrganizations(filters: PlatformOrganizationFilt
     memberCountByOrganization.set(
       member.organization_id,
       (memberCountByOrganization.get(member.organization_id) ?? 0) + 1
+    );
+  }
+  for (const invite of pendingInvitations ?? []) {
+    memberCountByOrganization.set(
+      invite.organization_id,
+      (memberCountByOrganization.get(invite.organization_id) ?? 0) + 1
     );
   }
   const contactCountByOrganization = new Map<string, number>();
@@ -76,6 +96,7 @@ export async function getPlatformOrganizations(filters: PlatformOrganizationFilt
   const normalizedQuery = filters.q?.trim().toLowerCase();
 
   return {
+    plans: plans ?? [],
     organizations: (organizations ?? [])
       .map((organization) => {
         const subscription = latestSubscriptionByOrganization.get(organization.id) ?? null;

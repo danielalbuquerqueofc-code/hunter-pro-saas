@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { formatPlanPrice, getOrganizationPlanUsage } from "@/features/billing/plan-limits";
 import { requireOrganizationAccess } from "@/features/organizations/guards";
 import { inviteOrganizationUserAction, updateOrganizationMemberAction } from "@/features/users/actions";
 import { ROLES } from "@/lib/constants/roles";
@@ -25,6 +26,7 @@ export default async function UsuariosPage({ searchParams }: UsuariosPageProps) 
   const query = await searchParams;
   const { organization } = await requireOrganizationAccess(["OWNER", "ADMIN"]);
   const supabase = await createClient();
+  const planUsage = await getOrganizationPlanUsage(supabase, organization.id);
 
   const { data: members } = await supabase
     .from("organization_members")
@@ -52,6 +54,25 @@ export default async function UsuariosPage({ searchParams }: UsuariosPageProps) 
             Membro atualizado com sucesso.
           </div>
         ) : null}
+
+        <Card className="rounded-3xl">
+          <CardContent className="grid gap-4 p-5 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-zinc-400">Plano atual</p>
+              <h2 className="mt-1 text-2xl font-black text-zinc-950">
+                {planUsage.plan.name} - {formatPlanPrice(planUsage.plan)}/mes
+              </h2>
+              <p className="mt-2 text-sm font-semibold text-zinc-500">
+                {planUsage.usedSlots} de {planUsage.maximumUsers} vaga{planUsage.maximumUsers === 1 ? "" : "s"} em uso.
+                {planUsage.pendingInvitations > 0 ? ` ${planUsage.pendingInvitations} convite pendente reserva vaga.` : ""}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-zinc-50 p-4 text-center">
+              <p className="text-3xl font-black text-brand-orange">{planUsage.availableSlots}</p>
+              <p className="text-xs font-black uppercase text-zinc-400">Disponiveis</p>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="rounded-3xl">
           <CardHeader>

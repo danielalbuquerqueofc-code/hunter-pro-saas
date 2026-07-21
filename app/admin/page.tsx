@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { updateOrganizationAccessAction } from "@/features/admin/actions";
+import { assignOrganizationPlanAction, updateOrganizationAccessAction } from "@/features/admin/actions";
 import { getPlatformOrganizations } from "@/features/admin/queries";
 import { requireSuperAdmin } from "@/lib/auth";
 
@@ -28,8 +28,9 @@ function statusClass(status: string) {
   return "bg-red-50 text-red-700";
 }
 
-function formatCurrency(value?: number | null) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format((value ?? 0) / 100);
+function formatCurrency(value?: number | null, alreadyDecimal = false) {
+  const amount = alreadyDecimal ? value ?? 0 : (value ?? 0) / 100;
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(amount);
 }
 
 const adminModules = [
@@ -48,7 +49,7 @@ const adminModules = [
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   await requireSuperAdmin();
   const query = await searchParams;
-  const { organizations, recentAuditLogs } = await getPlatformOrganizations({
+  const { organizations, plans, recentAuditLogs } = await getPlatformOrganizations({
     q: query.q,
     status: query.status ?? "all"
   });
@@ -141,8 +142,22 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     </div>
                     <p className="mt-1 text-sm text-zinc-500">/{organization.slug} · {organization.email ?? organization.phone ?? organization.whatsapp ?? "sem contato comercial"}</p>
                     <div className="mt-4 grid gap-3 text-sm text-zinc-600 sm:grid-cols-2 xl:grid-cols-4">
-                      <span><strong className="block text-zinc-950">Plano</strong>{organization.plan?.name ?? "Sem plano"}</span>
-                      <span><strong className="block text-zinc-950">Membros</strong>{organization.memberCount}</span>
+                      <span>
+                        <strong className="block text-zinc-950">Plano</strong>
+                        {organization.plan?.name ?? "Sem plano"} - {organization.plan?.monthly_price ? formatCurrency(organization.plan.monthly_price, true) : formatCurrency(organization.plan?.price_cents)}
+                      </span>
+                      <span>
+                        <strong className="block text-zinc-950">Usuarios</strong>
+                        {organization.memberCount} de {organization.plan?.maximum_users ?? 1}
+                      </span>
+                      <span>
+                        <strong className="block text-zinc-950">Forma</strong>
+                        {organization.subscription?.billing_provider ?? "Sem cobranca"}
+                      </span>
+                      <span>
+                        <strong className="block text-zinc-950">Pagamento</strong>
+                        {organization.subscription?.asaas_status ?? organization.subscription?.status ?? organization.subscription_status ?? "-"}
+                      </span>
                       <span><strong className="block text-zinc-950">Clientes</strong>{organization.contactCount}</span>
                       <span><strong className="block text-zinc-950">Agendamentos</strong>{organization.appointmentCount}</span>
                       <span><strong className="block text-zinc-950">Criada em</strong>{formatDate(organization.created_at)}</span>
@@ -165,23 +180,50 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     </div>
                   </div>
 
-                  <form action={updateOrganizationAccessAction} className="space-y-3">
-                    <input type="hidden" name="organizationId" value={organization.id} />
-                    <textarea
-                      name="reason"
-                      rows={3}
-                      placeholder="Motivo da acao administrativa"
-                      className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-orange"
-                    />
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button name="action" value="activate" size="sm" type="submit">Ativar</Button>
-                      <Button name="action" value="extend_trial" size="sm" type="submit" variant="secondary">+5 dias</Button>
-                      <Button name="action" value="block" size="sm" type="submit" variant="outline">Bloquear</Button>
-                      <Button name="action" value="unblock" size="sm" type="submit" variant="outline">Liberar</Button>
-                      <Button name="action" value="expire_trial" size="sm" type="submit" variant="secondary">Encerrar teste</Button>
-                      <Button name="action" value="cancel" size="sm" type="submit" variant="outline">Cancelar</Button>
-                    </div>
-                  </form>
+                  <div className="space-y-4">
+                    <form action={assignOrganizationPlanAction} className="space-y-3 rounded-2xl border border-zinc-200 p-4">
+                      <input type="hidden" name="organizationId" value={organization.id} />
+                      <p className="text-sm font-black text-zinc-950">Plano comercial</p>
+                      <Select name="planCode" defaultValue={organization.plan?.code ?? "start"}>
+                        {plans.map((plan) => (
+                          <option key={plan.code} value={plan.code}>
+                            {plan.name} - {formatCurrency(plan.monthly_price ?? plan.price_cents, Boolean(plan.monthly_price))} - ate {plan.maximum_users} usuarios
+                          </option>
+                        ))}
+                      </Select>
+                      <Select name="changeTiming" defaultValue="immediate">
+                        <option value="immediate">Aplicar agora</option>
+                        <option value="next_cycle">Proximo ciclo</option>
+                      </Select>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input name="customMonthlyPrice" placeholder="Valor customizado" />
+                        <Input name="discountPercent" placeholder="Desconto %" />
+                        <Input name="trialEndsAt" type="date" title="Fim do teste" />
+                        <Input name="currentPeriodEnd" type="date" title="Vencimento" />
+                      </div>
+                      <Input name="courtesyUntil" type="date" title="Cortesia ate" />
+                      <Input name="reason" placeholder="Observacao da troca" />
+                      <Button type="submit" size="sm" className="w-full">Aplicar plano</Button>
+                    </form>
+
+                    <form action={updateOrganizationAccessAction} className="space-y-3">
+                      <input type="hidden" name="organizationId" value={organization.id} />
+                      <textarea
+                        name="reason"
+                        rows={3}
+                        placeholder="Motivo da acao administrativa"
+                        className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-orange"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button name="action" value="activate" size="sm" type="submit">Ativar</Button>
+                        <Button name="action" value="extend_trial" size="sm" type="submit" variant="secondary">+5 dias</Button>
+                        <Button name="action" value="block" size="sm" type="submit" variant="outline">Bloquear</Button>
+                        <Button name="action" value="unblock" size="sm" type="submit" variant="outline">Liberar</Button>
+                        <Button name="action" value="expire_trial" size="sm" type="submit" variant="secondary">Encerrar teste</Button>
+                        <Button name="action" value="cancel" size="sm" type="submit" variant="outline">Cancelar</Button>
+                      </div>
+                    </form>
+                  </div>
                 </div>
               </article>
             ))}

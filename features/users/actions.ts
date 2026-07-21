@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { assertCanAddOrganizationUser } from "@/features/billing/plan-limits";
 import { requireOrganizationAccess } from "@/features/organizations/guards";
 import type { Role } from "@/lib/constants/roles";
 import { env } from "@/lib/env";
@@ -85,6 +86,26 @@ export async function inviteOrganizationUserAction(formData: FormData) {
 
   if (!email || !email.includes("@")) {
     redirect(`/usuarios?error=${encodeURIComponent("Informe um e-mail valido para convite.")}`);
+  }
+
+  const { data: existingInvitation } = await supabase
+    .from("organization_invitations")
+    .select("id,status,expires_at")
+    .eq("organization_id", organization.id)
+    .eq("email", email)
+    .eq("status", "SENT")
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+
+  if (existingInvitation) {
+    redirect(`/usuarios?error=${encodeURIComponent("Ja existe um convite pendente para este e-mail.")}`);
+  }
+
+  try {
+    await assertCanAddOrganizationUser(supabase, organization.id);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "O limite de usuarios do plano foi atingido.";
+    redirect(`/usuarios?error=${encodeURIComponent(message)}`);
   }
 
   const { data: invite, error } = await admin.auth.admin.inviteUserByEmail(email, {
