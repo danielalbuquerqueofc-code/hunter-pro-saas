@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useActionState, useMemo, useState } from "react";
+import { type CSSProperties, type ReactNode, useActionState, useMemo, useState } from "react";
 import {
   Bot,
   ChevronsUpDown,
@@ -406,9 +406,15 @@ export function ShowcaseStudio({
               <a href={publicUrl} target="_blank" rel="noreferrer" className="rounded-full bg-[var(--store-primary)] px-4 py-3 text-center font-black text-[var(--store-primary-contrast)]">
                 Agendar
               </a>
-              <a href={whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, "")}` : "#"} className="rounded-full border border-[var(--store-border)] px-4 py-3 text-center font-black">
-                WhatsApp
-              </a>
+              {whatsapp ? (
+                <a href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`} className="rounded-full border border-[var(--store-border)] px-4 py-3 text-center font-black">
+                  WhatsApp
+                </a>
+              ) : (
+                <span className="rounded-full border border-[var(--store-border)] px-4 py-3 text-center font-black text-[var(--store-muted)]">
+                  Sem WhatsApp
+                </span>
+              )}
             </div>
             <div className="mt-5 grid gap-3">
               {services.slice(0, 3).map((service) => (
@@ -464,28 +470,35 @@ export function ShowcaseStudio({
         </section>
 
         <section className="hp-card rounded-[2rem] p-5">
-          <h2 className="text-xl font-black">Redes e mídia</h2>
+          <h2 className="text-xl font-black">Redes e midia</h2>
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <a href={instagramUrl || "#"} className="rounded-2xl bg-slate-50 p-4 text-center font-bold">
-              <Instagram className="mx-auto mb-2 h-5 w-5 text-pink-300" />
-              Instagram
-            </a>
-            <a href={whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, "")}` : "#"} className="rounded-2xl bg-slate-50 p-4 text-center font-bold">
-              <MessageCircle className="mx-auto mb-2 h-5 w-5 text-[var(--hp-accent)]" />
-              WhatsApp
-            </a>
-            <a href={youtubeUrl || "#"} className="rounded-2xl bg-slate-50 p-4 text-center font-bold">
-              <Play className="mx-auto mb-2 h-5 w-5 text-red-300" />
-              YouTube
-            </a>
-            <a href={phone ? `tel:${phone.replace(/\D/g, "")}` : "#"} className="rounded-2xl bg-slate-50 p-4 text-center font-bold">
-              <Phone className="mx-auto mb-2 h-5 w-5 text-sky-300" />
-              Ligar
-            </a>
+            <SocialPreviewLink href={instagramUrl} icon={<Instagram className="mx-auto mb-2 h-5 w-5 text-pink-300" />} label="Instagram" />
+            <SocialPreviewLink href={whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, "")}` : ""} icon={<MessageCircle className="mx-auto mb-2 h-5 w-5 text-[var(--hp-accent)]" />} label="WhatsApp" />
+            <SocialPreviewLink href={youtubeUrl} icon={<Play className="mx-auto mb-2 h-5 w-5 text-red-300" />} label="YouTube" />
+            <SocialPreviewLink href={phone ? `tel:${phone.replace(/\D/g, "")}` : ""} icon={<Phone className="mx-auto mb-2 h-5 w-5 text-sky-300" />} label="Ligar" />
           </div>
         </section>
       </aside>
     </div>
+  );
+}
+
+function SocialPreviewLink({ href, icon, label }: { href?: string | null; icon: ReactNode; label: string }) {
+  if (!href) {
+    return (
+      <span className="rounded-2xl bg-slate-50 p-4 text-center font-bold text-slate-400">
+        {icon}
+        {label}
+        <span className="mt-1 block text-[11px] font-bold">Nao configurado</span>
+      </span>
+    );
+  }
+
+  return (
+    <a href={href} target="_blank" rel="noreferrer" className="rounded-2xl bg-slate-50 p-4 text-center font-bold">
+      {icon}
+      {label}
+    </a>
   );
 }
 

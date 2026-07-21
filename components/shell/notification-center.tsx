@@ -9,7 +9,6 @@ export function NotificationCenter() {
       aria-label="Central de notificacoes"
     >
       <Bell className="h-5 w-5" />
-      <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-amber-300" />
     </Link>
   );
 }

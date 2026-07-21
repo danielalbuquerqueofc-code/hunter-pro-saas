@@ -8,10 +8,9 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/security-audit.mjs && node scripts/access-control-tests.mjs && node scripts/public-showcase-tests.mjs && node scripts/scheduling-tests.mjs && node scripts/integration-readiness-tests.mjs && node scripts/commercial-plan-tests.mjs && node scripts/critical-fixes-tests.mjs"
+    "test": "node scripts/security-audit.mjs && node scripts/access-control-tests.mjs && node scripts/public-showcase-tests.mjs && node scripts/scheduling-tests.mjs && node scripts/integration-readiness-tests.mjs && node scripts/commercial-plan-tests.mjs && node scripts/critical-fixes-tests.mjs && node scripts/cleanup-audit-tests.mjs"
   },
   "dependencies": {
-    "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-slot": "^1.1.2",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.48.1",
@@ -21,7 +20,6 @@
     "next": "^16.2.10",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-hook-form": "^7.54.2",
     "stripe": "^22.3.2",
     "tailwind-merge": "^2.6.0",
     "zod": "^3.24.1"

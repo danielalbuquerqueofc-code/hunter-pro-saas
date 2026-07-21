@@ -22,11 +22,32 @@ function onlyDigits(value: string | null) {
   return (value ?? "").replace(/\D/g, "");
 }
 
-export default async function ClientesPage() {
+type ClientesPageProps = {
+  searchParams: Promise<{ q?: string; filtro?: string }>;
+};
+
+export default async function ClientesPage({ searchParams }: ClientesPageProps) {
+  const query = await searchParams;
   const { organization } = await requireOrganizationAccess(["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT"]);
   const { contacts } = await getCrmData(organization.id);
   const clients = contacts.filter((contact) => ["CLIENT", "CUSTOMER"].includes(String(contact.type ?? "").toUpperCase()));
-  const visibleClients = clients.length ? clients : contacts;
+  const baseClients = clients.length ? clients : contacts;
+  const search = String(query.q ?? "").trim().toLowerCase();
+  const filter = String(query.filtro ?? "Todos");
+  const visibleClients = baseClients.filter((client, index) => {
+    const matchesSearch = search
+      ? [client.name, client.company_name, client.email, client.phone].some((value) =>
+          String(value ?? "").toLowerCase().includes(search)
+        )
+      : true;
+    const matchesFilter =
+      filter === "Todos" ||
+      (filter === "Recentes" && index < 10) ||
+      (filter === "VIP" && client.status === "ACTIVE") ||
+      (filter === "Retorno" && String(client.notes ?? "").toLowerCase().includes("retorno")) ||
+      (filter === "Sem contato" && !client.email && !client.phone);
+    return matchesSearch && matchesFilter;
+  });
 
   return (
     <section className="mx-auto grid max-w-5xl gap-5 px-4 py-5 sm:px-6 lg:px-8">
@@ -37,29 +58,35 @@ export default async function ClientesPage() {
       </div>
 
       <div className="hp-card rounded-[2rem] p-4">
-        <div className="flex gap-3">
+        <form action="/clientes" className="flex gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl bg-white/10 px-4 py-3">
             <Search className="h-5 w-5 shrink-0 text-zinc-500" />
             <input
+              name="q"
+              defaultValue={query.q ?? ""}
               className="min-w-0 flex-1 bg-transparent text-base font-semibold outline-none placeholder:text-zinc-500"
               placeholder="Buscar cliente"
               type="search"
             />
           </div>
-          <button type="button" className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">
+          <button type="submit" className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">
             <SlidersHorizontal className="h-5 w-5 text-zinc-300" />
           </button>
-        </div>
+        </form>
 
         <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
           {["Todos", "Recentes", "VIP", "Retorno", "Sem contato"].map((filter) => (
-            <button
+            <Link
               key={filter}
-              type="button"
-              className="shrink-0 rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-zinc-300 first:bg-[var(--hp-accent)] first:text-[#04100a]"
+              href={`/clientes?filtro=${encodeURIComponent(filter)}${query.q ? `&q=${encodeURIComponent(query.q)}` : ""}`}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold ${
+                (query.filtro ?? "Todos") === filter
+                  ? "bg-[var(--hp-accent)] text-[#04100a]"
+                  : "bg-white/10 text-zinc-300"
+              }`}
             >
               {filter}
-            </button>
+            </Link>
           ))}
         </div>
       </div>
@@ -93,22 +120,35 @@ export default async function ClientesPage() {
                     <p className="mt-1 text-xs font-bold text-zinc-500">Ultimo registro: {formatDate(client.created_at)}</p>
                   </div>
                   <div className="flex shrink-0 gap-2">
-                    <a
-                      href={whatsapp}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/10 text-[var(--hp-accent)]"
-                      aria-label="Chamar no WhatsApp"
-                    >
-                      <MessageCircle className="h-5 w-5" />
-                    </a>
-                    <a
-                      href={phone ? `tel:+55${phone.replace(/^55/, "")}` : "#"}
-                      className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-zinc-200"
-                      aria-label="Ligar"
-                    >
-                      <Phone className="h-5 w-5" />
-                    </a>
+                    {phone ? (
+                      <>
+                        <a
+                          href={whatsapp}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/10 text-[var(--hp-accent)]"
+                          aria-label="Chamar no WhatsApp"
+                        >
+                          <MessageCircle className="h-5 w-5" />
+                        </a>
+                        <a
+                          href={`tel:+55${phone.replace(/^55/, "")}`}
+                          className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-zinc-200"
+                          aria-label="Ligar"
+                        >
+                          <Phone className="h-5 w-5" />
+                        </a>
+                      </>
+                    ) : (
+                      <>
+                        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-zinc-500" aria-label="WhatsApp nao informado">
+                          <MessageCircle className="h-5 w-5" />
+                        </span>
+                        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-zinc-500" aria-label="Telefone nao informado">
+                          <Phone className="h-5 w-5" />
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </article>
