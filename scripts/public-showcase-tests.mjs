@@ -33,6 +33,11 @@ assertIncludes(storefront, "Resumo", "booking flow tracks the final summary step
 assertIncludes(storefront, "PublicStorefrontHero", "public storefront has a dedicated hero component");
 assertIncludes(storefront, "ServicesSection", "public storefront has a dedicated services section");
 assertIncludes(storefront, "MobileBottomNavigation", "public storefront has a dedicated mobile navigation");
+assertIncludes(storefront, "services.slice(0, 4)", "home services list starts with up to four services");
+assertIncludes(storefront, "grid-cols-2", "mobile services grid uses two columns");
+assertIncludes(storefront, "md:grid-cols-3", "tablet services grid can use three columns");
+assertIncludes(storefront, "xl:grid-cols-4", "desktop services grid uses four columns");
+assertIncludes(storefront, "setShowAllServices(true)", "services section can expand to all services");
 assertIncludes(storefront, "onClick={() => openBooking(service.id)}", "service cards preselect booking service");
 assertIncludes(storefront, "safe-area-inset-bottom", "mobile bottom navigation respects safe area");
 assertIncludes(storefront, "Sob consulta", "undefined zero price is not shown as promotional value");

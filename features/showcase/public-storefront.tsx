@@ -839,22 +839,28 @@ function ServiceCard({ service, index, openBooking }: { service: Service; index:
       <div className="relative aspect-[4/3] overflow-hidden bg-[var(--store-bg-soft)]">
         <ServiceMedia service={service} index={index} />
         {index === 0 ? (
-          <span className="absolute left-3 top-3 rounded-full bg-[var(--store-primary)] px-3 py-1 text-[11px] font-black text-[var(--store-primary-contrast)]">
+          <span className="absolute left-2 top-2 rounded-full bg-[var(--store-primary)] px-2 py-1 text-[10px] font-black text-[var(--store-primary-contrast)] sm:left-3 sm:top-3 sm:px-3 sm:text-[11px]">
             Destaque
           </span>
         ) : null}
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="line-clamp-2 text-lg font-black leading-tight">{service.name}</h3>
-        <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--store-muted)]">{shortServiceDescription(service)}</p>
-        <div className="mt-4 flex items-center justify-between gap-3 text-sm">
-          <span className="inline-flex items-center gap-1.5 font-bold text-[var(--store-muted)]">
-            <Clock className="h-4 w-4 text-[var(--store-primary)]" />
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
+        <h3 className="line-clamp-2 min-h-[2.35rem] text-[15px] font-black leading-tight sm:min-h-[2.75rem] sm:text-lg">{service.name}</h3>
+        <p className="mt-1.5 line-clamp-2 min-h-[2rem] text-[11px] leading-4 text-[var(--store-muted)] min-[390px]:block sm:mt-2 sm:min-h-[3rem] sm:text-sm sm:leading-6">
+          {shortServiceDescription(service)}
+        </p>
+        <div className="mt-3 grid gap-1.5 text-xs sm:mt-4 sm:flex sm:items-center sm:justify-between sm:gap-3 sm:text-sm">
+          <span className="inline-flex min-w-0 items-center gap-1.5 font-bold text-[var(--store-muted)]">
+            <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--store-primary)] sm:h-4 sm:w-4" />
             {formatDuration(service.duration_minutes)}
           </span>
-          <strong className="text-[var(--store-primary)]">{formatCurrency(service.price_cents)}</strong>
+          <strong className="truncate text-[15px] leading-tight text-[var(--store-primary)] sm:text-base">{formatCurrency(service.price_cents)}</strong>
         </div>
-        <button type="button" onClick={() => openBooking(service.id)} className="mt-5 min-h-12 rounded-xl bg-[var(--store-primary)] px-4 text-sm font-black text-[var(--store-primary-contrast)]">
+        <button
+          type="button"
+          onClick={() => openBooking(service.id)}
+          className="mt-auto min-h-10 rounded-xl bg-[var(--store-primary)] px-3 pt-0.5 text-[13px] font-black text-[var(--store-primary-contrast)] transition active:scale-[0.98] sm:mt-5 sm:min-h-12 sm:px-4 sm:text-sm"
+        >
           Agendar
         </button>
       </div>
@@ -864,6 +870,8 @@ function ServiceCard({ service, index, openBooking }: { service: Service; index:
 
 function ServicesSection({ context }: { context: StorefrontContext }) {
   const { services, whatsapp, openBooking } = context;
+  const [showAllServices, setShowAllServices] = useState(false);
+  const visibleServices = showAllServices ? services : services.slice(0, 4);
 
   return (
     <section id="servicos" className="mx-auto max-w-7xl px-5 py-14 lg:px-8 lg:py-20">
@@ -872,14 +880,31 @@ function ServicesSection({ context }: { context: StorefrontContext }) {
           <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--store-primary)]">Nossos servicos</p>
           <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-5xl">Escolha o servico ideal</h2>
         </div>
-        {services.length > 4 ? <a href="#servicos" className="hidden text-sm font-black text-[var(--store-primary)] sm:inline-flex">Ver todos os servicos</a> : null}
+        {services.length > 4 ? (
+          <button type="button" onClick={() => setShowAllServices(true)} className="hidden text-sm font-black text-[var(--store-primary)] sm:inline-flex">
+            Ver todos os servicos
+          </button>
+        ) : null}
       </div>
       {services.length ? (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {services.map((service, index) => (
+        <>
+          <div className="grid grid-cols-2 gap-3 min-[360px]:gap-4 md:grid-cols-3 xl:grid-cols-4">
+          {visibleServices.map((service, index) => (
             <ServiceCard key={service.id} service={service} index={index} openBooking={openBooking} />
           ))}
-        </div>
+          </div>
+          {services.length > 4 && !showAllServices ? (
+            <div className="mt-7 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowAllServices(true)}
+                className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[var(--store-border)] bg-white px-6 text-sm font-black text-[var(--store-primary)] shadow-sm transition hover:border-[var(--store-primary)]"
+              >
+                Ver todos os servicos
+              </button>
+            </div>
+          ) : null}
+        </>
       ) : (
         <div className="rounded-[1.7rem] border border-dashed border-[var(--store-border)] bg-white p-8 text-center">
           <Sparkles className="mx-auto mb-3 h-8 w-8 text-[var(--store-primary)]" />

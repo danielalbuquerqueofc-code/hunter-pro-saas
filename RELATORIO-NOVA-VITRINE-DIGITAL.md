@@ -62,8 +62,45 @@ Tambem havia risco de a experiencia parecer generica quando a empresa nao tinha 
 - Menu mobile funcional.
 - Hero reorganizada para celular.
 - Cards de servico com imagem, preco, duracao e botao grande.
+- Grid de servicos ajustado para 2 cards por linha no celular, mantendo imagem, nome, duracao, preco e botao `Agendar`.
+- A home da vitrine mostra inicialmente ate 4 servicos, em 2 linhas no mobile, com botao `Ver todos os servicos`.
 - Barra inferior fixa com item central `Agendar`.
 - Formulario de agendamento em formato de sheet.
+
+## Ajuste dos cards de servicos
+
+O componente-base reutilizado continua sendo `ServiceCard`, dentro de `ServicesSection`, preservando o visual aprovado da vitrine e o fluxo de agendamento com servico pre-selecionado.
+
+Breakpoints aplicados:
+
+- celular: `grid-cols-2`, com gap compacto e card reduzido;
+- celulares pequenos: o layout tenta manter 2 colunas com imagem 4:3 e textos truncados;
+- tablet/notebook: `md:grid-cols-3`;
+- desktop amplo: `xl:grid-cols-4`.
+
+Regras do grid:
+
+- a lista inicial exibe `services.slice(0, 4)`;
+- o botao `Ver todos os servicos` expande a lista completa sem trocar de componente;
+- os cards usam `h-full`, coluna flexivel e `mt-auto` no botao para manter alinhamento inferior;
+- imagens usam proporcao 4:3 e `object-fit: cover` via `ServiceMedia`;
+- nomes e descricoes usam `line-clamp-2` para evitar desalinhamento;
+- preco, duracao e botao permanecem visiveis no mobile;
+- `Sob consulta` continua sendo usado quando nao ha preco definido.
+
+Testes de responsividade considerados na implementacao:
+
+- 320 px, 360 px, 375 px, 390 px, 414 px e 430 px: 2 cards por linha como padrao mobile;
+- 768 px e 1024 px: grade intermediaria com 3 cards por linha quando houver espaco;
+- 1280 px e 1440 px: 4 cards por linha.
+
+Casos especiais cobertos:
+
+- servico sem imagem usa fallback visual;
+- servico sem preco nao exibe `R$ 0,00` como promocao;
+- nome e descricao longos sao truncados;
+- botao `Agendar` permanece alinhado ao fim do card;
+- grid evita scroll horizontal usando colunas fluidas e gaps reduzidos no mobile.
 
 ## Melhorias de conversao
 
