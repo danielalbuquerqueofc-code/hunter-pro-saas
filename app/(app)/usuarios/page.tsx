@@ -2,10 +2,11 @@ import { Users } from "lucide-react";
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { requireOrganizationAccess } from "@/features/organizations/guards";
-import { updateOrganizationMemberAction } from "@/features/users/actions";
+import { inviteOrganizationUserAction, updateOrganizationMemberAction } from "@/features/users/actions";
 import { ROLES } from "@/lib/constants/roles";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,7 +18,7 @@ const COMPANY_ROLES = ROLES.filter((role) => role !== "SUPER_ADMIN");
 const STATUS_LABEL: Record<string, string> = {
   ACTIVE: "Ativo",
   INVITED: "Convidado",
-  DISABLED: "Desativado"
+  SUSPENDED: "Desativado"
 };
 
 export default async function UsuariosPage({ searchParams }: UsuariosPageProps) {
@@ -30,6 +31,12 @@ export default async function UsuariosPage({ searchParams }: UsuariosPageProps) 
     .select("id,user_id,role,status,created_at,profile:profiles(full_name,phone,avatar_url)")
     .eq("organization_id", organization.id)
     .order("created_at", { ascending: true });
+  const { data: invitations } = await supabase
+    .from("organization_invitations")
+    .select("id,email,role,status,provider_error,created_at")
+    .eq("organization_id", organization.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
 
   return (
     <>
@@ -45,6 +52,32 @@ export default async function UsuariosPage({ searchParams }: UsuariosPageProps) 
             Membro atualizado com sucesso.
           </div>
         ) : null}
+
+        <Card className="rounded-3xl">
+          <CardHeader>
+            <CardTitle>Convidar novo usuario</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form action={inviteOrganizationUserAction} className="grid gap-4 lg:grid-cols-[1fr_240px_auto] lg:items-end">
+              <div className="space-y-2">
+                <Label htmlFor="inviteEmail">E-mail</Label>
+                <Input id="inviteEmail" name="email" type="email" placeholder="usuario@empresa.com" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="inviteRole">Perfil</Label>
+                <Select id="inviteRole" name="role" defaultValue="ATTENDANT">
+                  {COMPANY_ROLES.map((role) => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </Select>
+              </div>
+              <Button type="submit">Enviar convite</Button>
+            </form>
+            <p className="mt-3 text-xs text-zinc-500">
+              O convite e enviado pelo Supabase Auth. O acesso fica vinculado apenas a esta empresa.
+            </p>
+          </CardContent>
+        </Card>
 
         <Card className="rounded-3xl">
           <CardHeader>
@@ -83,7 +116,7 @@ export default async function UsuariosPage({ searchParams }: UsuariosPageProps) 
                       <Select id={`status-${member.id}`} name="status" defaultValue={member.status}>
                         <option value="ACTIVE">Ativo</option>
                         <option value="INVITED">Convidado</option>
-                        <option value="DISABLED">Desativado</option>
+                        <option value="SUSPENDED">Desativado</option>
                       </Select>
                     </div>
                     <Button type="submit" variant="secondary">Salvar</Button>
@@ -94,6 +127,33 @@ export default async function UsuariosPage({ searchParams }: UsuariosPageProps) 
             {(members ?? []).length === 0 ? (
               <div className="rounded-2xl border border-dashed border-zinc-200 p-8 text-center text-sm text-zinc-500">
                 Nenhum membro encontrado para esta empresa.
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-3xl">
+          <CardHeader>
+            <CardTitle>Historico de convites</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            {(invitations ?? []).map((invite) => (
+              <article key={invite.id} className="rounded-2xl border border-zinc-200 bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-black text-zinc-950">{invite.email}</p>
+                    <p className="text-sm text-zinc-500">{invite.role} - {new Date(invite.created_at).toLocaleString("pt-BR")}</p>
+                  </div>
+                  <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-black text-zinc-600">{invite.status}</span>
+                </div>
+                {invite.provider_error ? (
+                  <p className="mt-3 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">{invite.provider_error}</p>
+                ) : null}
+              </article>
+            ))}
+            {(invitations ?? []).length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-zinc-200 p-8 text-center text-sm text-zinc-500">
+                Nenhum convite enviado ainda.
               </div>
             ) : null}
           </CardContent>

@@ -144,11 +144,8 @@ Pendentes para etapa futura:
 ## Pendencias
 
 - Criar telas internas separadas para cada submodulo do superadmin, caso a operacao cresca.
-- Adicionar convite/criacao de usuarios pela empresa com fluxo completo de email.
-- Adicionar upload real de logo, capa e avatar via Supabase Storage.
-- Modelar documento, razao social, dados fiscais, responsavel legal e ultimo acesso real.
 - Implementar suporte comercial real sem contato ficticio.
-- Integrar pagamento real e webhooks de assinatura.
+- Cadastrar chaves reais do Stripe e `stripe_price_id` dos planos para ativar checkout.
 - Adicionar revogacao de sessoes e 2FA.
 - Capturar IP/origem nos logs quando a infraestrutura disponibilizar esses dados.
 
@@ -176,3 +173,49 @@ Pendentes para etapa futura:
 | Plano e assinatura | Ausente | Criada | `app/(app)/plano-assinatura/page.tsx` | `/plano-assinatura` | Owner/Admin/Financeiro | lint, typecheck, test, build |
 | Ajuda e suporte | Ausente | Criada com atalhos internos | `app/(app)/ajuda/page.tsx` | `/ajuda` | Usuario autenticado | lint, typecheck, test, build |
 | Validacao local | Incompleta | Atualizada para novas rotas e menu | `scripts/security-audit.mjs` | scripts | Desenvolvimento | npm test |
+
+## Atualizacao - Contas, Storage, convites e billing
+
+Foi criada e aplicada no Supabase a migration `0012_accounts_storage_invites_billing.sql`.
+
+### O que foi criado
+
+- Bucket publico controlado por RLS: `hunter-assets`.
+- Politicas de Storage para permitir upload somente por membros autorizados da empresa.
+- Campos extras em `profiles`: WhatsApp, cargo, bio, idioma, fuso, formato de data, preferencias e ultimo acesso.
+- Campos extras em `organizations`: razao social, documento, inscricoes, dados de cobranca, suporte e cliente Stripe.
+- Campos Stripe em `plans` e `subscriptions`.
+- Tabela `organization_invitations` com RLS para convites de equipe.
+- Endpoint seguro `/api/webhooks/stripe`.
+- Acao server-side para criar Checkout Session Stripe.
+- Acao server-side para convidar usuarios por e-mail via Supabase Auth Admin.
+- Upload real de avatar, logo e capa usando Supabase Storage.
+
+### O que foi alterado na interface
+
+- `/minha-conta`: upload de foto, WhatsApp, cargo, bio, idioma, fuso e formato de data.
+- `/configuracoes`: upload de logo/capa, razao social, documento, inscricoes e dados de cobranca.
+- `/usuarios`: convite por e-mail e historico de convites.
+- `/plano-assinatura`: botoes de assinatura com Stripe, bloqueados quando nao houver configuracao real.
+
+### Segurança
+
+- A chave secreta do Supabase continua somente no servidor.
+- O upload passa por RLS usando o primeiro segmento da pasta como `organization_id`.
+- Convite de usuario exige OWNER ou ADMIN.
+- Webhook Stripe exige assinatura `STRIPE_WEBHOOK_SECRET`.
+- Checkout so cria sessao se existir `STRIPE_SECRET_KEY` e `stripe_price_id`.
+
+### Validacoes da atualizacao
+
+- `npm.cmd run lint`: aprovado.
+- `npm.cmd run typecheck`: aprovado.
+- `npm.cmd test`: aprovado.
+- `npm.cmd run build`: aprovado.
+
+### Ainda depende de configuracao externa
+
+- `STRIPE_SECRET_KEY`.
+- `STRIPE_WEBHOOK_SECRET`.
+- `stripe_price_id` em cada plano no Supabase.
+- Configuracao de MFA no Supabase Auth para ativar 2FA de ponta a ponta.

@@ -14,14 +14,26 @@ export async function updateMyProfileAction(formData: FormData) {
   const supabase = await createClient();
   const fullName = text(formData, "fullName", 180);
   const phone = text(formData, "phone", 40);
+  const whatsapp = text(formData, "whatsapp", 40);
   const avatarUrl = text(formData, "avatarUrl", 800);
+  const jobTitle = text(formData, "jobTitle", 120);
+  const bio = text(formData, "bio", 600);
+  const locale = text(formData, "locale", 20) || "pt-BR";
+  const timezone = text(formData, "timezone", 80) || "America/Sao_Paulo";
+  const dateFormat = text(formData, "dateFormat", 30) || "dd/MM/yyyy";
 
   const { error } = await supabase
     .from("profiles")
     .update({
       full_name: fullName || null,
       phone: phone || null,
-      avatar_url: avatarUrl || null
+      whatsapp: whatsapp || null,
+      avatar_url: avatarUrl || null,
+      job_title: jobTitle || null,
+      bio: bio || null,
+      locale,
+      timezone,
+      date_format: dateFormat
     })
     .eq("id", user.id);
 

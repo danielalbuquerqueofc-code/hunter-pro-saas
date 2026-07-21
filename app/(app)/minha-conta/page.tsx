@@ -1,9 +1,12 @@
 import { KeyRound, ShieldCheck, UserCircle } from "lucide-react";
+import { StorageImageUpload } from "@/components/forms/storage-image-upload";
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { updateMyPasswordAction, updateMyProfileAction } from "@/features/account/actions";
 import { requireOrganizationAccess } from "@/features/organizations/guards";
 import { requireUser } from "@/lib/auth";
@@ -16,11 +19,11 @@ type MinhaContaPageProps = {
 export default async function MinhaContaPage({ searchParams }: MinhaContaPageProps) {
   const query = await searchParams;
   const user = await requireUser();
-  await requireOrganizationAccess();
+  const { organization } = await requireOrganizationAccess();
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name,avatar_url,phone,is_super_admin,created_at,updated_at")
+    .select("full_name,avatar_url,phone,whatsapp,job_title,bio,locale,timezone,date_format,is_super_admin,created_at,updated_at")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -59,15 +62,54 @@ export default async function MinhaContaPage({ searchParams }: MinhaContaPagePro
                     <Input id="phone" name="phone" defaultValue={profile?.phone ?? ""} inputMode="tel" autoComplete="tel" />
                   </div>
                 </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="whatsapp">WhatsApp</Label>
+                    <Input id="whatsapp" name="whatsapp" defaultValue={profile?.whatsapp ?? ""} inputMode="tel" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="jobTitle">Cargo</Label>
+                    <Input id="jobTitle" name="jobTitle" defaultValue={profile?.job_title ?? ""} />
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">E-mail de acesso</Label>
                   <Input id="email" value={user.email ?? ""} disabled />
                   <p className="text-xs text-zinc-500">Alteracao de e-mail deve passar por confirmacao do provedor de autenticacao.</p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="avatarUrl">Foto do perfil</Label>
-                  <Input id="avatarUrl" name="avatarUrl" defaultValue={profile?.avatar_url ?? ""} placeholder="https://..." />
-                  <p className="text-xs text-zinc-500">Nesta versao, a foto usa URL segura. Upload com recorte fica como proxima etapa de Storage.</p>
+                  <Label htmlFor="bio">Bio curta</Label>
+                  <Textarea id="bio" name="bio" defaultValue={profile?.bio ?? ""} />
+                </div>
+                <StorageImageUpload
+                  id="avatarUpload"
+                  name="avatarUrl"
+                  label="Foto do perfil"
+                  initialUrl={profile?.avatar_url}
+                  pathPrefix={`${organization.id}/profiles`}
+                  filePrefix={`${user.id}-avatar`}
+                  help="A foto e enviada com seguranca para o Storage do Supabase."
+                />
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="locale">Idioma</Label>
+                    <Select id="locale" name="locale" defaultValue={profile?.locale ?? "pt-BR"}>
+                      <option value="pt-BR">Portugues Brasil</option>
+                      <option value="en-US">English</option>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="timezone">Fuso horario</Label>
+                    <Input id="timezone" name="timezone" defaultValue={profile?.timezone ?? "America/Sao_Paulo"} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dateFormat">Formato de data</Label>
+                    <Select id="dateFormat" name="dateFormat" defaultValue={profile?.date_format ?? "dd/MM/yyyy"}>
+                      <option value="dd/MM/yyyy">dd/MM/aaaa</option>
+                      <option value="MM/dd/yyyy">MM/dd/aaaa</option>
+                      <option value="yyyy-MM-dd">aaaa-MM-dd</option>
+                    </Select>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full sm:w-fit">Salvar perfil</Button>
               </form>
@@ -109,6 +151,12 @@ export default async function MinhaContaPage({ searchParams }: MinhaContaPagePro
               <p className="mt-2 text-sm leading-6 text-zinc-500">
                 Perfil e senha sao alterados pelo usuario autenticado. Permissoes, cargos e acesso a empresas ficam restritos aos administradores autorizados.
               </p>
+              <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                <p className="text-sm font-black text-zinc-950">2FA e sessoes ativas</p>
+                <p className="mt-2 text-sm leading-6 text-zinc-500">
+                  A base visual esta preparada. Para ativar verificacao em duas etapas e revogacao de sessoes, habilite MFA no Supabase Auth e defina a politica de sessao do projeto.
+                </p>
+              </div>
               <dl className="mt-4 grid gap-3 text-sm">
                 <div>
                   <dt className="font-bold text-zinc-950">Criada em</dt>

@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/layout/app-header";
+import { StorageImageUpload } from "@/components/forms/storage-image-upload";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,7 +24,7 @@ export default async function ConfiguracoesPage({ searchParams }: ConfiguracoesP
   const { data: organizationDetails } = dashboard.organization
     ? await supabase
         .from("organizations")
-        .select("id,name,slug,phone,whatsapp,email,description,logo_url,cover_url,address,city,state,zip_code,trial_started_at,trial_ends_at,access_status,subscription_status")
+        .select("id,name,slug,legal_name,document,state_registration,municipal_registration,phone,whatsapp,email,description,logo_url,cover_url,address,city,state,zip_code,billing_email,billing_phone,billing_address,billing_city,billing_state,billing_zip_code,trial_started_at,trial_ends_at,access_status,subscription_status")
         .eq("id", dashboard.organization.id)
         .maybeSingle()
     : { data: null };
@@ -65,6 +66,26 @@ export default async function ConfiguracoesPage({ searchParams }: ConfiguracoesP
                     <Input id="slug" value={`/p/${dashboard.organization.slug}`} disabled />
                   </div>
                 </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="legalName">Razao social</Label>
+                    <Input id="legalName" name="legalName" defaultValue={organizationDetails?.legal_name ?? ""} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="document">Documento / CNPJ</Label>
+                    <Input id="document" name="document" defaultValue={organizationDetails?.document ?? ""} />
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="stateRegistration">Inscricao estadual</Label>
+                    <Input id="stateRegistration" name="stateRegistration" defaultValue={organizationDetails?.state_registration ?? ""} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="municipalRegistration">Inscricao municipal</Label>
+                    <Input id="municipalRegistration" name="municipalRegistration" defaultValue={organizationDetails?.municipal_registration ?? ""} />
+                  </div>
+                </div>
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
                     <Label htmlFor="phone">Telefone</Label>
@@ -84,14 +105,22 @@ export default async function ConfiguracoesPage({ searchParams }: ConfiguracoesP
                   <Textarea id="description" name="description" defaultValue={organizationDetails?.description ?? ""} />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="logoUrl">Logo</Label>
-                    <Input id="logoUrl" name="logoUrl" defaultValue={organizationDetails?.logo_url ?? ""} placeholder="https://..." />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="coverUrl">Capa</Label>
-                    <Input id="coverUrl" name="coverUrl" defaultValue={organizationDetails?.cover_url ?? ""} placeholder="https://..." />
-                  </div>
+                  <StorageImageUpload
+                    id="logoUpload"
+                    name="logoUrl"
+                    label="Logo"
+                    initialUrl={organizationDetails?.logo_url}
+                    pathPrefix={`${dashboard.organization.id}/organization`}
+                    filePrefix="logo"
+                  />
+                  <StorageImageUpload
+                    id="coverUpload"
+                    name="coverUrl"
+                    label="Capa"
+                    initialUrl={organizationDetails?.cover_url}
+                    pathPrefix={`${dashboard.organization.id}/organization`}
+                    filePrefix="cover"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="address">Endereco</Label>
@@ -109,6 +138,39 @@ export default async function ConfiguracoesPage({ searchParams }: ConfiguracoesP
                   <div className="space-y-2">
                     <Label htmlFor="zipCode">CEP</Label>
                     <Input id="zipCode" name="zipCode" defaultValue={organizationDetails?.zip_code ?? ""} />
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                  <h3 className="font-black text-zinc-950">Dados de cobranca</h3>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="billingEmail">E-mail de cobranca</Label>
+                      <Input id="billingEmail" name="billingEmail" defaultValue={organizationDetails?.billing_email ?? ""} type="email" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="billingPhone">Telefone de cobranca</Label>
+                      <Input id="billingPhone" name="billingPhone" defaultValue={organizationDetails?.billing_phone ?? ""} inputMode="tel" />
+                    </div>
+                  </div>
+                  <div className="mt-4 grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="billingAddress">Endereco de cobranca</Label>
+                      <Input id="billingAddress" name="billingAddress" defaultValue={organizationDetails?.billing_address ?? ""} />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="billingCity">Cidade</Label>
+                        <Input id="billingCity" name="billingCity" defaultValue={organizationDetails?.billing_city ?? ""} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="billingState">Estado</Label>
+                        <Input id="billingState" name="billingState" defaultValue={organizationDetails?.billing_state ?? ""} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="billingZipCode">CEP</Label>
+                        <Input id="billingZipCode" name="billingZipCode" defaultValue={organizationDetails?.billing_zip_code ?? ""} />
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <Button type="submit" className="w-full sm:w-fit">Salvar dados da empresa</Button>

@@ -15,6 +15,10 @@ export async function updateOrganizationProfileAction(formData: FormData) {
 
   const payload = {
     name: text(formData, "name", 180),
+    legal_name: text(formData, "legalName", 220) || null,
+    document: text(formData, "document", 40) || null,
+    state_registration: text(formData, "stateRegistration", 80) || null,
+    municipal_registration: text(formData, "municipalRegistration", 80) || null,
     phone: text(formData, "phone", 40) || null,
     whatsapp: text(formData, "whatsapp", 40) || null,
     email: text(formData, "email", 180) || null,
@@ -24,7 +28,13 @@ export async function updateOrganizationProfileAction(formData: FormData) {
     address: text(formData, "address", 240) || null,
     city: text(formData, "city", 120) || null,
     state: text(formData, "state", 80) || null,
-    zip_code: text(formData, "zipCode", 40) || null
+    zip_code: text(formData, "zipCode", 40) || null,
+    billing_email: text(formData, "billingEmail", 180) || null,
+    billing_phone: text(formData, "billingPhone", 40) || null,
+    billing_address: text(formData, "billingAddress", 240) || null,
+    billing_city: text(formData, "billingCity", 120) || null,
+    billing_state: text(formData, "billingState", 80) || null,
+    billing_zip_code: text(formData, "billingZipCode", 40) || null
   };
 
   if (!payload.name) {
