@@ -13,6 +13,7 @@ type AppShellProps = {
   organizationName: string;
   organizationSlug?: string | null;
   role?: Role | null;
+  isSuperAdmin?: boolean;
 };
 
 export function AppShell({
@@ -20,7 +21,8 @@ export function AppShell({
   email,
   organizationName,
   organizationSlug,
-  role
+  role,
+  isSuperAdmin = false
 }: AppShellProps) {
   const visibleNav = shellNavItems.filter((item) => canSeeNavItem(role, item));
   const publicHref = organizationSlug ? `/p/${organizationSlug}` : "/vitrine";
@@ -28,13 +30,16 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-[var(--hp-bg)] text-[var(--hp-text)]">
       <header className="sticky top-0 z-30 border-b border-[var(--hp-line)] bg-[var(--hp-surface)] text-[var(--hp-text)] shadow-sm backdrop-blur-xl">
-        <Topbar email={email} organizationName={organizationName} publicHref={publicHref} />
+        <Topbar email={email} organizationName={organizationName} publicHref={publicHref} isSuperAdmin={isSuperAdmin} />
         <AppSidebar items={visibleNav} />
       </header>
 
       <main className="min-w-0 pb-28 lg:pb-8">{children}</main>
 
-      <MobileNavigation items={visibleNav.map((item) => ({ href: item.href, label: item.label }))} />
+      <MobileNavigation
+        items={visibleNav.map((item) => ({ href: item.href, label: item.label }))}
+        isSuperAdmin={isSuperAdmin}
+      />
 
       <div className="fixed bottom-24 right-5 z-40 lg:bottom-8">
         <Link

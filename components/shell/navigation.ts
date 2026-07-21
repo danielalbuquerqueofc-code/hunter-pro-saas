@@ -5,11 +5,13 @@ import {
   CalendarDays,
   ClipboardList,
   FileText,
+  HelpCircle,
   LayoutDashboard,
   MessagesSquare,
   Settings,
   SlidersHorizontal,
   Store,
+  UserCircle,
   Users,
   WalletCards
 } from "lucide-react";
@@ -29,6 +31,9 @@ const icons = {
   "/automacoes": SlidersHorizontal,
   "/ia": Bot,
   "/configuracoes": Settings,
+  "/minha-conta": UserCircle,
+  "/plano-assinatura": BadgeDollarSign,
+  "/ajuda": HelpCircle,
   "/leads": Users,
   "/pipeline": BriefcaseBusiness,
   "/clientes": Users,

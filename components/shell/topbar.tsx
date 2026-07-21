@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Eye, Menu, Search, Sparkles } from "lucide-react";
+import { Eye, Menu, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { GlobalSearch } from "@/components/shell/global-search";
 import { NotificationCenter } from "@/components/shell/notification-center";
 import { OrganizationSwitcher } from "@/components/shell/organization-switcher";
@@ -11,9 +11,10 @@ type TopbarProps = {
   email?: string | null;
   organizationName: string;
   publicHref: string;
+  isSuperAdmin?: boolean;
 };
 
-export function Topbar({ email, organizationName, publicHref }: TopbarProps) {
+export function Topbar({ email, organizationName, publicHref, isSuperAdmin = false }: TopbarProps) {
   return (
     <div className="flex min-h-16 items-center gap-3 px-4 lg:px-6">
       <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
@@ -36,6 +37,16 @@ export function Topbar({ email, organizationName, publicHref }: TopbarProps) {
         <div className="hidden md:block">
           <NotificationCenter />
         </div>
+        {isSuperAdmin ? (
+          <Link
+            href="/admin"
+            className="hidden h-10 items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 text-sm font-black text-brand-orange transition hover:bg-orange-100 md:flex"
+            aria-label="Administracao da plataforma"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            Admin
+          </Link>
+        ) : null}
         <Link
           href="/crm"
           className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100 lg:hidden"

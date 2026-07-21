@@ -17,14 +17,17 @@ const requiredGuardFiles = [
   "app/(app)/ia-sdr/page.tsx",
   "app/(app)/leads/page.tsx",
   "app/(app)/leads/[id]/page.tsx",
+  "app/(app)/minha-conta/page.tsx",
   "app/(app)/orcamentos/page.tsx",
   "app/(app)/orcamentos/[id]/page.tsx",
+  "app/(app)/plano-assinatura/page.tsx",
   "app/(app)/pipeline/page.tsx",
   "app/(app)/relatorios/page.tsx",
   "app/(app)/servicos/page.tsx",
   "app/(app)/tarefas/page.tsx",
   "app/(app)/usuarios/page.tsx",
   "app/(app)/vendas/page.tsx",
+  "app/(app)/ajuda/page.tsx",
   "app/(app)/vitrine/page.tsx"
 ];
 
@@ -64,6 +67,14 @@ const nav = readFileSync(join(root, "components/shell/navigation.ts"), "utf8");
 if (!nav.includes("canUseModule")) {
   failures.push("Menu principal nao usa feature flags de modulo.");
 }
+if (!nav.includes("/minha-conta") || !nav.includes("/plano-assinatura") || !nav.includes("/usuarios")) {
+  failures.push("Menu principal nao expoe conta, plano e usuarios conforme permissao.");
+}
+
+const mobileNav = readFileSync(join(root, "components/shell/mobile-navigation.tsx"), "utf8");
+if (!mobileNav.includes("Menu completo") || !mobileNav.includes("Principal") || !mobileNav.includes("Gestao") || !mobileNav.includes("Sistema")) {
+  failures.push("Menu mobile nao possui drawer completo com agrupamentos.");
+}
 
 const layout = readFileSync(join(root, "app/(app)/layout.tsx"), "utf8");
 if (!layout.includes("redirectIfOrganizationCannotUseApp")) {
@@ -86,7 +97,7 @@ if (!blockedPage.includes("signOutAction") || !blockedPage.includes("/precos")) 
 }
 
 const adminPage = readFileSync(join(root, "app/admin/page.tsx"), "utf8");
-if (!adminPage.includes("updateOrganizationAccessAction")) {
+if (!adminPage.includes("requireSuperAdmin") || !adminPage.includes("updateOrganizationAccessAction")) {
   failures.push("Admin global nao possui acoes de controle de acesso.");
 }
 

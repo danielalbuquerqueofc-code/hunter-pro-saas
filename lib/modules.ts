@@ -22,6 +22,9 @@ export const appModules = [
   { href: "/automacoes", label: "Automacoes", roles: ["OWNER", "ADMIN", "MANAGER"], status: "active" },
   { href: "/ia", label: "IA", roles: ["OWNER", "ADMIN", "MANAGER"], status: "active" },
   { href: "/configuracoes", label: "Configuracoes", roles: ["OWNER", "ADMIN"], status: "active" },
+  { href: "/minha-conta", label: "Minha conta", roles: ["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT", "PROFESSIONAL", "FINANCIAL"], status: "active" },
+  { href: "/plano-assinatura", label: "Plano e assinatura", roles: ["OWNER", "ADMIN", "FINANCIAL"], status: "active" },
+  { href: "/ajuda", label: "Ajuda e suporte", roles: ["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT", "PROFESSIONAL", "FINANCIAL"], status: "active" },
   { href: "/leads", label: "Leads", roles: ["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT"], status: "disabled" },
   { href: "/pipeline", label: "Pipeline", roles: ["OWNER", "ADMIN", "MANAGER", "SALES"], status: "disabled" },
   { href: "/clientes", label: "Clientes", roles: ["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT"], status: "active" },
@@ -30,7 +33,7 @@ export const appModules = [
   { href: "/vendas", label: "Vendas", roles: ["OWNER", "ADMIN", "MANAGER", "SALES", "FINANCIAL"], status: "disabled" },
   { href: "/avaliacoes", label: "Avaliacoes", roles: ["OWNER", "ADMIN", "MANAGER", "ATTENDANT"], status: "disabled" },
   { href: "/ia-sdr", label: "IA SDR", roles: ["OWNER", "ADMIN", "MANAGER", "SALES"], status: "disabled" },
-  { href: "/usuarios", label: "Usuarios", roles: ["OWNER", "ADMIN"], status: "disabled" }
+  { href: "/usuarios", label: "Usuarios e equipe", roles: ["OWNER", "ADMIN"], status: "active" }
 ] satisfies AppModule[];
 
 export function getModuleByHref(href: string) {
