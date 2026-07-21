@@ -197,6 +197,7 @@ Foi criada e aplicada no Supabase a migration `0012_accounts_storage_invites_bil
 - `/configuracoes`: upload de logo/capa, razao social, documento, inscricoes e dados de cobranca.
 - `/usuarios`: convite por e-mail e historico de convites.
 - `/plano-assinatura`: botoes de assinatura com Stripe, bloqueados quando nao houver configuracao real.
+- `/minha-conta`: gerenciador real de 2FA/TOTP e acao para encerrar outras sessoes.
 
 ### Segurança
 
@@ -218,4 +219,4 @@ Foi criada e aplicada no Supabase a migration `0012_accounts_storage_invites_bil
 - `STRIPE_SECRET_KEY`.
 - `STRIPE_WEBHOOK_SECRET`.
 - `stripe_price_id` em cada plano no Supabase.
-- Configuracao de MFA no Supabase Auth para ativar 2FA de ponta a ponta.
+- Configuracao de MFA no Supabase Auth precisa estar habilitada no painel do Supabase para o fluxo TOTP funcionar em producao.

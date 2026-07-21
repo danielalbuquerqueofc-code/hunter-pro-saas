@@ -1,4 +1,5 @@
 import { KeyRound, ShieldCheck, UserCircle } from "lucide-react";
+import { MfaManager } from "@/components/account/mfa-manager";
 import { StorageImageUpload } from "@/components/forms/storage-image-upload";
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
@@ -151,11 +152,8 @@ export default async function MinhaContaPage({ searchParams }: MinhaContaPagePro
               <p className="mt-2 text-sm leading-6 text-zinc-500">
                 Perfil e senha sao alterados pelo usuario autenticado. Permissoes, cargos e acesso a empresas ficam restritos aos administradores autorizados.
               </p>
-              <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                <p className="text-sm font-black text-zinc-950">2FA e sessoes ativas</p>
-                <p className="mt-2 text-sm leading-6 text-zinc-500">
-                  A base visual esta preparada. Para ativar verificacao em duas etapas e revogacao de sessoes, habilite MFA no Supabase Auth e defina a politica de sessao do projeto.
-                </p>
+              <div className="mt-4">
+                <MfaManager />
               </div>
               <dl className="mt-4 grid gap-3 text-sm">
                 <div>
