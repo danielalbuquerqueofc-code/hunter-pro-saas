@@ -76,23 +76,27 @@ Falta tela completa para:
 
 ### Asaas
 
-Status: nao ativado.
+Status: preparado para credenciais reais.
 
-Ainda depende de credenciais reais e decisao de ambiente.
+Foi criada a base de integracao com:
 
-Necessario implementar com seguranca:
+- variaveis `BILLING_PROVIDER`, `ASAAS_ENVIRONMENT`, `ASAAS_API_KEY` e `ASAAS_WEBHOOK_TOKEN`;
+- cliente HTTP usando o header oficial `access_token`;
+- ambiente sandbox/producao separado;
+- criacao de cliente Asaas;
+- criacao de assinatura Asaas;
+- webhook em `/api/webhooks/asaas`;
+- validacao do header `asaas-access-token`;
+- idempotencia por evento em `billing_events`;
+- atualizacao de assinatura e status da empresa por evento de pagamento;
+- migration `0013_asaas_billing_readiness.sql`.
 
-- `ASAAS_API_KEY`;
-- ambiente sandbox/producao;
-- cadastro de cliente;
-- cobrancas;
-- assinaturas;
-- webhooks;
-- idempotencia;
-- logs sem token;
-- tela administrativa de cobranca;
-- estados de pagamento;
-- bloqueio por inadimplencia.
+Ainda depende de:
+
+- chave sandbox/producao real no Vercel;
+- token real de webhook configurado no painel Asaas;
+- teste de homologacao sandbox;
+- tela superadmin completa para editar planos sem SQL.
 
 Nao foi criada simulacao de pagamento.
 

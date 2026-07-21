@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createBillingCheckoutAction } from "@/features/billing/actions";
 import { getOrganizationAccessState } from "@/features/organizations/access-control";
 import { requireOrganizationAccess } from "@/features/organizations/guards";
+import { getAsaasEnvironment, hasAsaasEnv } from "@/lib/asaas";
+import { env } from "@/lib/env";
 import { hasStripeEnv } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 
@@ -28,20 +30,25 @@ export default async function PlanoAssinaturaPage({ searchParams }: PlanoAssinat
   const [{ data: subscription }, { data: plans }] = await Promise.all([
     supabase
       .from("subscriptions")
-      .select("status,current_period_start,current_period_end,stripe_subscription_id,plan:plans(code,name,description,price_cents,stripe_price_id)")
+      .select("status,current_period_start,current_period_end,billing_provider,stripe_subscription_id,asaas_subscription_id,asaas_invoice_url,asaas_status,plan:plans(code,name,description,price_cents,stripe_price_id,billing_provider,asaas_billing_type,asaas_cycle)")
       .eq("organization_id", organization.id)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
     supabase
       .from("plans")
-      .select("code,name,description,price_cents,stripe_price_id")
+      .select("code,name,description,price_cents,stripe_price_id,billing_provider,asaas_billing_type,asaas_cycle")
       .eq("is_active", true)
-      .order("price_cents", { ascending: true })
+      .is("archived_at", null)
+      .order("sort_order", { ascending: true })
   ]);
   const plan = Array.isArray(subscription?.plan) ? subscription?.plan[0] : subscription?.plan;
   const access = getOrganizationAccessState(organization);
   const stripeReady = hasStripeEnv();
+  const asaasReady = hasAsaasEnv();
+  const billingProvider = env.billingProvider.toLowerCase() === "asaas" ? "asaas" : "stripe";
+  const providerReady = billingProvider === "asaas" ? asaasReady : stripeReady;
+  const providerLabel = billingProvider === "asaas" ? `Asaas ${getAsaasEnvironment()}` : "Stripe";
 
   return (
     <>
@@ -98,17 +105,27 @@ export default async function PlanoAssinaturaPage({ searchParams }: PlanoAssinat
                   <p className="mt-auto text-2xl font-black text-brand-orange">{formatCurrency(item.price_cents)}</p>
                   <form action={createBillingCheckoutAction} className="mt-4">
                     <input type="hidden" name="planCode" value={item.code} />
+                    <input type="hidden" name="provider" value={billingProvider} />
                     <Button
                       type="submit"
-                      disabled={!stripeReady || !item.stripe_price_id}
+                      disabled={
+                        item.code === plan?.code ||
+                        !providerReady ||
+                        (billingProvider === "stripe" && !item.stripe_price_id)
+                      }
                       className="w-full"
                       variant={item.code === plan?.code ? "secondary" : "default"}
                     >
                       {item.code === plan?.code ? "Plano atual" : "Assinar"}
                     </Button>
                   </form>
-                  {!item.stripe_price_id ? (
+                  {billingProvider === "stripe" && !item.stripe_price_id ? (
                     <p className="mt-2 text-xs font-bold text-zinc-400">Configure o stripe_price_id deste plano.</p>
+                  ) : null}
+                  {billingProvider === "asaas" ? (
+                    <p className="mt-2 text-xs font-bold text-zinc-400">
+                      Asaas: {item.asaas_billing_type ?? "PIX"} / {item.asaas_cycle ?? "MONTHLY"}.
+                    </p>
                   ) : null}
                 </article>
               ))}
@@ -123,10 +140,20 @@ export default async function PlanoAssinaturaPage({ searchParams }: PlanoAssinat
               <h2 className="mt-4 text-lg font-black">{access.label}</h2>
               <p className="mt-2 text-sm leading-6 text-zinc-500">{access.reason}</p>
               <p className="mt-5 rounded-2xl bg-zinc-50 p-4 text-xs font-bold text-zinc-500">
-                {stripeReady
-                  ? "Stripe conectado no servidor. O checkout sera criado somente para planos com stripe_price_id."
-                  : "Stripe ainda nao possui STRIPE_SECRET_KEY no ambiente. Nenhum checkout falso foi ativado."}
+                {providerReady
+                  ? `${providerLabel} conectado no servidor. A cobranca sera criada somente com dados reais.`
+                  : `${providerLabel} ainda nao esta configurado no ambiente. Nenhuma cobranca falsa foi ativada.`}
               </p>
+              {subscription?.asaas_invoice_url ? (
+                <a
+                  href={subscription.asaas_invoice_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-orange px-4 text-sm font-black text-white"
+                >
+                  Abrir cobranca Asaas
+                </a>
+              ) : null}
             </CardContent>
           </Card>
         </aside>
