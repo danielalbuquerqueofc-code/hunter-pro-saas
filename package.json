@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/security-audit.mjs && node scripts/access-control-tests.mjs && node scripts/public-showcase-tests.mjs && node scripts/scheduling-tests.mjs && node scripts/integration-readiness-tests.mjs && node scripts/commercial-plan-tests.mjs"
+    "test": "node scripts/security-audit.mjs && node scripts/access-control-tests.mjs && node scripts/public-showcase-tests.mjs && node scripts/scheduling-tests.mjs && node scripts/integration-readiness-tests.mjs && node scripts/commercial-plan-tests.mjs && node scripts/critical-fixes-tests.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

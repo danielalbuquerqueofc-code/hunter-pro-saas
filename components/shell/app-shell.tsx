@@ -10,6 +10,7 @@ import type { Role } from "@/lib/constants/roles";
 type AppShellProps = {
   children: ReactNode;
   email?: string | null;
+  userName?: string | null;
   organizationName: string;
   organizationSlug?: string | null;
   role?: Role | null;
@@ -19,6 +20,7 @@ type AppShellProps = {
 export function AppShell({
   children,
   email,
+  userName,
   organizationName,
   organizationSlug,
   role,
@@ -30,7 +32,7 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-[var(--hp-bg)] text-[var(--hp-text)]">
       <header className="sticky top-0 z-30 border-b border-[var(--hp-line)] bg-[var(--hp-surface)] text-[var(--hp-text)] shadow-sm backdrop-blur-xl">
-        <Topbar email={email} organizationName={organizationName} publicHref={publicHref} isSuperAdmin={isSuperAdmin} />
+        <Topbar email={email} userName={userName} organizationName={organizationName} publicHref={publicHref} isSuperAdmin={isSuperAdmin} />
         <AppSidebar items={visibleNav} />
       </header>
 

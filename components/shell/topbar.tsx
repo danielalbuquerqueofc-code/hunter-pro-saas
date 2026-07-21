@@ -9,12 +9,13 @@ import { UserMenu } from "@/components/shell/user-menu";
 
 type TopbarProps = {
   email?: string | null;
+  userName?: string | null;
   organizationName: string;
   publicHref: string;
   isSuperAdmin?: boolean;
 };
 
-export function Topbar({ email, organizationName, publicHref, isSuperAdmin = false }: TopbarProps) {
+export function Topbar({ email, userName, organizationName, publicHref, isSuperAdmin = false }: TopbarProps) {
   return (
     <div className="flex min-h-16 items-center gap-3 px-4 lg:px-6">
       <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
@@ -72,7 +73,7 @@ export function Topbar({ email, organizationName, publicHref, isSuperAdmin = fal
           <ThemeToggle />
         </div>
         <div className="hidden sm:block">
-          <UserMenu email={email} />
+          <UserMenu email={email} userName={userName} />
         </div>
         <Link
           href="/configuracoes"

@@ -76,7 +76,7 @@ Depois que a Vercel estiver funcionando:
 3. Adicione seu dominio, por exemplo:
 
 ```txt
-danielalbuquerque.com.br
+prospectoads.com
 ```
 
 4. A Vercel vai mostrar registros DNS.
@@ -101,14 +101,14 @@ No Supabase:
 3. Em Site URL, coloque:
 
 ```txt
-https://danielalbuquerque.com.br
+https://prospectoads.com
 ```
 
 4. Em Redirect URLs, adicione:
 
 ```txt
-https://danielalbuquerque.com.br/**
-https://www.danielalbuquerque.com.br/**
+https://prospectoads.com/**
+https://www.prospectoads.com/**
 ```
 
 Se tambem for testar local:

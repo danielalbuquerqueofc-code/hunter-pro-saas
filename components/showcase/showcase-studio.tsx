@@ -111,7 +111,7 @@ export function ShowcaseStudio({
   const [youtubeUrl, setYoutubeUrl] = useState(showcase?.youtube_url ?? "");
   const [addressText, setAddressText] = useState(showcase?.address_text ?? "");
   const selectedTheme = showcaseThemeOptions.find((theme) => theme.key === themeKey) ?? showcaseThemeOptions[0];
-  const previewStyle = resolveShowcaseTheme({ primary_color: showcase?.primary_color, theme_key: themeKey, font_key: fontKey }) as CSSProperties;
+  const previewStyle = resolveShowcaseTheme({ theme_key: themeKey, font_key: fontKey }) as CSSProperties;
   const qrCodeUrl = useMemo(
     () => `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(publicUrl)}`,
     [publicUrl]
@@ -214,6 +214,7 @@ export function ShowcaseStudio({
                 </Select>
               </div>
             </div>
+            <input type="hidden" name="primaryColor" value="" />
 
             <div className="space-y-2">
               <Label htmlFor="subtitle" className="text-slate-600">Chamada principal</Label>

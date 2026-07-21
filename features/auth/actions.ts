@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { env } from "@/lib/env";
 import { signInSchema, signUpSchema } from "@/lib/validations/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -38,6 +39,43 @@ export async function signInAction(formData: FormData) {
 
   if (error) {
     redirectWithError("/login", error.message || "E-mail ou senha invalidos.");
+  }
+
+  revalidatePath("/", "layout");
+  redirect("/dashboard");
+}
+
+export async function requestPasswordRecoveryAction(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!email || !email.includes("@")) {
+    redirectWithError("/recuperar-senha", "Informe um e-mail valido.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${env.appUrl.replace(/\/$/, "")}/auth/callback?next=/definir-senha`
+  });
+
+  if (error) {
+    redirectWithError("/recuperar-senha", "Nao foi possivel enviar o link agora.");
+  }
+
+  redirect("/recuperar-senha?success=1");
+}
+
+export async function definePasswordAction(formData: FormData) {
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+
+  if (password.length < 8 || password !== confirmPassword) {
+    redirectWithError("/definir-senha", "A senha precisa ter pelo menos 8 caracteres e ser igual a confirmacao.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    redirectWithError("/definir-senha", "Sua sessao expirou. Solicite um novo convite ou link de recuperacao.");
   }
 
   revalidatePath("/", "layout");

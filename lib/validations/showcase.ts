@@ -13,6 +13,7 @@ export const showcaseSchema = z.object({
   tiktokUrl: z.string().url("Informe uma URL valida.").optional().or(z.literal("")),
   youtubeUrl: z.string().url("Informe uma URL valida.").optional().or(z.literal("")),
   addressText: z.string().optional(),
+  primaryColor: z.string().regex(/^#[0-9a-f]{6}$/i, "Informe uma cor valida.").optional().or(z.literal("")),
   themeKey: z.enum(["clean_light", "premium_dark", "beauty", "wellness", "professional_blue", "gold"]),
   fontKey: z.enum(["sans", "serif", "rounded"]),
   status: z.enum(["DRAFT", "PUBLISHED"])

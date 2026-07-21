@@ -11,7 +11,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const dashboard = await getDashboardData(user.id);
   const { data: profile } = await supabase
     .from("profiles")
-    .select("is_super_admin")
+    .select("full_name,is_super_admin")
     .eq("id", user.id)
     .maybeSingle();
   redirectIfOrganizationCannotUseApp(dashboard.organization);
@@ -19,6 +19,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <AppShell
       email={user.email}
+      userName={profile?.full_name ?? user.user_metadata?.full_name ?? null}
       organizationName={dashboard.organization?.name ?? "Minha empresa"}
       organizationSlug={dashboard.organization?.slug}
       role={dashboard.role}

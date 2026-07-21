@@ -36,6 +36,6 @@ assertIncludes(billingActions, "provider === \"asaas\"", "billing action is prov
 assertIncludes(billingPage, "billingProvider", "billing page displays provider readiness");
 assertIncludes(migration, "billing_events", "billing events table migration exists");
 assertIncludes(migration, "asaas_subscription_id", "Asaas subscription tracking columns exist");
-assertIncludes(guide, "https://prospectorads.com/api/webhooks/asaas", "setup guide documents Asaas webhook URL");
+assertIncludes(guide, "https://prospectoads.com/api/webhooks/asaas", "setup guide documents Asaas webhook URL");
 
 console.log("Integration readiness checks passed.");

@@ -30,6 +30,7 @@ export async function saveShowcaseAction(formData: FormData) {
     tiktokUrl: formData.get("tiktokUrl"),
     youtubeUrl: formData.get("youtubeUrl"),
     addressText: formData.get("addressText"),
+    primaryColor: formData.get("primaryColor"),
     themeKey: formData.get("themeKey"),
     fontKey: formData.get("fontKey"),
     status: formData.get("status")
@@ -53,6 +54,7 @@ export async function saveShowcaseAction(formData: FormData) {
       tiktok_url: parsed.data.tiktokUrl || null,
       youtube_url: parsed.data.youtubeUrl || null,
       address_text: parsed.data.addressText || null,
+      primary_color: parsed.data.primaryColor || null,
       theme_key: parsed.data.themeKey,
       font_key: parsed.data.fontKey,
       status: parsed.data.status
@@ -91,6 +93,7 @@ export async function saveShowcaseStateAction(
     tiktokUrl: formData.get("tiktokUrl"),
     youtubeUrl: formData.get("youtubeUrl"),
     addressText: formData.get("addressText"),
+    primaryColor: formData.get("primaryColor"),
     themeKey: formData.get("themeKey"),
     fontKey: formData.get("fontKey"),
     status: formData.get("status")
@@ -116,6 +119,7 @@ export async function saveShowcaseStateAction(
       tiktok_url: parsed.data.tiktokUrl || null,
       youtube_url: parsed.data.youtubeUrl || null,
       address_text: parsed.data.addressText || null,
+      primary_color: parsed.data.primaryColor || null,
       theme_key: parsed.data.themeKey,
       font_key: parsed.data.fontKey,
       status: parsed.data.status

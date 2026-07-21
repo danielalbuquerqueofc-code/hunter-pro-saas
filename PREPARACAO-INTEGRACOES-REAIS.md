@@ -17,7 +17,7 @@ BILLING_PROVIDER=asaas
 ASAAS_ENVIRONMENT=sandbox
 ASAAS_API_KEY=
 ASAAS_WEBHOOK_TOKEN=
-NEXT_PUBLIC_APP_URL=https://prospectorads.com
+NEXT_PUBLIC_APP_URL=https://prospectoads.com
 ```
 
 Quando for para producao:
@@ -34,7 +34,7 @@ Use chave sandbox com ambiente sandbox e chave producao com ambiente producao.
 No painel do Asaas, configure:
 
 ```text
-https://prospectorads.com/api/webhooks/asaas
+https://prospectoads.com/api/webhooks/asaas
 ```
 
 O token configurado no Asaas precisa ser exatamente o mesmo valor de:
@@ -93,7 +93,7 @@ Variaveis reservadas:
 ```env
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-GOOGLE_CALENDAR_REDIRECT_URI=https://prospectorads.com/api/integrations/google-calendar/callback
+GOOGLE_CALENDAR_REDIRECT_URI=https://prospectoads.com/api/integrations/google-calendar/callback
 ```
 
 Cada empresa ou profissional precisa autorizar o Google Calendar. E-mail cadastrado nao e autorizacao.
@@ -121,7 +121,7 @@ Ela adiciona:
 3. Colocar a chave no Vercel como `ASAAS_API_KEY`.
 4. Definir `ASAAS_ENVIRONMENT=sandbox`.
 5. Criar um token forte para `ASAAS_WEBHOOK_TOKEN`.
-6. Configurar o webhook no Asaas apontando para `https://prospectorads.com/api/webhooks/asaas`.
+6. Configurar o webhook no Asaas apontando para `https://prospectoads.com/api/webhooks/asaas`.
 7. No Hunter Pro, acessar `Plano e assinatura`.
 8. Clicar em `Assinar` em um plano ativo.
 9. Validar se a cobranca abre no Asaas.

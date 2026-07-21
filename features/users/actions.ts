@@ -109,7 +109,7 @@ export async function inviteOrganizationUserAction(formData: FormData) {
   }
 
   const { data: invite, error } = await admin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${env.appUrl.replace(/\/$/, "")}/login`,
+    redirectTo: `${env.appUrl.replace(/\/$/, "")}/auth/callback?next=/definir-senha`,
     data: {
       invited_to_organization_id: organization.id,
       invited_to_organization_name: organization.name,

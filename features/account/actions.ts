@@ -41,7 +41,16 @@ export async function updateMyProfileAction(formData: FormData) {
     redirect(`/minha-conta?error=${encodeURIComponent("Nao foi possivel atualizar seu perfil.")}`);
   }
 
+  const { error: metadataError } = await supabase.auth.updateUser({
+    data: { full_name: fullName || null }
+  });
+
+  if (metadataError) {
+    redirect(`/minha-conta?error=${encodeURIComponent("Perfil salvo, mas nao foi possivel sincronizar a sessao. Atualize a pagina.")}`);
+  }
+
   revalidatePath("/minha-conta");
+  revalidatePath("/dashboard");
   revalidatePath("/", "layout");
   redirect("/minha-conta?success=perfil");
 }

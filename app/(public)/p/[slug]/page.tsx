@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: PublicShowcasePageProps): Pro
   }
 
   const showcase = data.showcase ?? fallbackShowcase(data);
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://prospectorads.com";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://prospectoads.com";
   const canonical = `${appUrl.replace(/\/$/, "")}/p/${data.organization.slug}`;
   const title = `${showcase.title} | Agendamento online`;
   const description =

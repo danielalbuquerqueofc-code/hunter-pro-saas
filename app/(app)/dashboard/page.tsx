@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { getDashboardData } from "@/features/dashboard/queries";
 import { getOnboardingProgress } from "@/features/onboarding/queries";
 import { requireUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 function formatCurrency(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -50,7 +51,13 @@ function getDateLabel() {
 
 export default async function DashboardPage() {
   const user = await requireUser();
+  const supabase = await createClient();
   const dashboard = await getDashboardData(user.id);
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle();
 
   if (!dashboard.organization) {
     return (
@@ -70,7 +77,7 @@ export default async function DashboardPage() {
   }
 
   const operations = dashboard.operations;
-  const name = user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "admin";
+  const name = profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "admin";
   const onboardingProgress = await getOnboardingProgress(dashboard.organization.id, user.id);
   const upcoming = operations?.upcomingAppointments.slice(0, 3) ?? [];
   const today = operations?.appointmentsToday ?? [];
