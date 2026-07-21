@@ -18,6 +18,7 @@ const companyAlias = read("app/(public)/p/[slug]/company/page.tsx");
 const storefront = read("features/showcase/public-storefront.tsx");
 const queries = read("features/showcase/queries.ts");
 const theme = read("features/showcase/theme.ts");
+const studio = read("components/showcase/showcase-studio.tsx");
 
 assertIncludes(page, "generateMetadata", "dynamic SEO metadata");
 assertIncludes(page, "PublicStorefront", "public storefront component is used by route");
@@ -28,6 +29,16 @@ assertIncludes(queries, "kind === \"blocked\"", "blocked times are filtered from
 assertIncludes(queries, "kind === \"appointment\"", "busy appointments are filtered from safe busy times");
 assertIncludes(theme, "resolveShowcaseTheme", "safe theme resolver exists");
 assertIncludes(theme, "contrastRatio", "contrast protection exists");
+assertIncludes(theme, "showcaseThemeOptions", "theme options are centralized");
+assertIncludes(theme, "legacyDefaultPrimary", "legacy default primary does not override selected themes");
+assertIncludes(theme, "\"--theme-primary\"", "new public theme tokens are exposed");
+assertIncludes(theme, "\"--store-primary\"", "legacy storefront token aliases remain available");
+assertIncludes(studio, "resolveShowcaseTheme", "showcase studio preview uses the same theme resolver as public page");
+assertIncludes(studio, "Aplicar tema", "studio has an explicit apply theme action");
+assertIncludes(studio, "Salvar alteracoes", "studio has an explicit save changes action");
+assertIncludes(studio, "Restaurar padrao", "studio can restore default theme");
+assertIncludes(studio, "Cancelar alteracoes", "studio can discard unsaved edits");
+assertIncludes(studio, "Visualizar vitrine", "studio can open the public storefront");
 assertIncludes(storefront, "BookingStepper", "booking sheet keeps the scheduling flow");
 assertIncludes(storefront, "Resumo", "booking flow tracks the final summary step");
 assertIncludes(storefront, "PublicStorefrontHero", "public storefront has a dedicated hero component");

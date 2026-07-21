@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { type CSSProperties, useActionState, useMemo, useState } from "react";
 import {
   Bot,
   ChevronsUpDown,
@@ -29,6 +29,7 @@ import {
   saveShowcaseStateAction,
   type ShowcaseActionState
 } from "@/features/showcase/actions";
+import { resolveShowcaseTheme, showcaseThemeOptions } from "@/features/showcase/theme";
 import { createClient } from "@/lib/supabase/client";
 
 type ShowcaseFormData = {
@@ -44,6 +45,7 @@ type ShowcaseFormData = {
   tiktok_url: string | null;
   youtube_url: string | null;
   address_text: string | null;
+  primary_color?: string | null;
   theme_key: string | null;
   font_key: string | null;
   status: string | null;
@@ -78,14 +80,6 @@ type ShowcaseStudioProps = {
 };
 
 const initialState: ShowcaseActionState = { ok: false };
-const themes = [
-  { key: "clean_light", name: "Clean claro", accent: "#111827", bg: "from-[#ffffff] to-[#eef2f7]", text: "text-slate-950" },
-  { key: "premium_dark", name: "Premium escuro", accent: "#22c55e", bg: "from-[#08110d] to-[#0b1117]", text: "text-white" },
-  { key: "beauty", name: "Beauty", accent: "#ec4899", bg: "from-[#fff1f7] to-[#ffe4ef]", text: "text-slate-950" },
-  { key: "wellness", name: "Wellness", accent: "#22c55e", bg: "from-[#eefdf4] to-[#dcfce7]", text: "text-slate-950" },
-  { key: "professional_blue", name: "Azul profissional", accent: "#0284c7", bg: "from-[#eff6ff] to-[#dbeafe]", text: "text-slate-950" },
-  { key: "gold", name: "Gold", accent: "#d97706", bg: "from-[#fffbeb] to-[#fde68a]", text: "text-slate-950" }
-];
 
 function formatCurrency(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -116,7 +110,8 @@ export function ShowcaseStudio({
   const [tiktokUrl, setTiktokUrl] = useState(showcase?.tiktok_url ?? "");
   const [youtubeUrl, setYoutubeUrl] = useState(showcase?.youtube_url ?? "");
   const [addressText, setAddressText] = useState(showcase?.address_text ?? "");
-  const selectedTheme = themes.find((theme) => theme.key === themeKey) ?? themes[0];
+  const selectedTheme = showcaseThemeOptions.find((theme) => theme.key === themeKey) ?? showcaseThemeOptions[0];
+  const previewStyle = resolveShowcaseTheme({ primary_color: showcase?.primary_color, theme_key: themeKey, font_key: fontKey }) as CSSProperties;
   const qrCodeUrl = useMemo(
     () => `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(publicUrl)}`,
     [publicUrl]
@@ -128,6 +123,28 @@ export function ShowcaseStudio({
   ];
   const copyPublicUrl = () => {
     void navigator.clipboard?.writeText(publicUrl);
+  };
+  const resetToSaved = () => {
+    setThemeKey(showcase?.theme_key ?? "clean_light");
+    setFontKey(showcase?.font_key ?? "sans");
+    setTitle(showcase?.title ?? organizationName);
+    setSubtitle(showcase?.subtitle ?? "Atendimento simples, profissional e com agenda online.");
+    setDescription(showcase?.description ?? "Escolha um servico, veja horarios e fale com a equipe em poucos toques.");
+    setHeroImageUrl(showcase?.hero_image_url ?? "");
+    setLogoUrl(showcase?.logo_url ?? "");
+    setWhatsapp(showcase?.whatsapp ?? "");
+    setPhone(showcase?.phone ?? "");
+    setInstagramUrl(showcase?.instagram_url ?? "");
+    setFacebookUrl(showcase?.facebook_url ?? "");
+    setTiktokUrl(showcase?.tiktok_url ?? "");
+    setYoutubeUrl(showcase?.youtube_url ?? "");
+    setAddressText(showcase?.address_text ?? "");
+  };
+  const restoreDefaultTheme = () => {
+    const confirmed = window.confirm("Restaurar o tema padrao da vitrine? As demais informacoes continuam no formulario ate voce salvar.");
+    if (!confirmed) return;
+    setThemeKey("beauty");
+    setFontKey("sans");
   };
   const uploadAsset = async (file: File, kind: "logo" | "cover") => {
     const supabase = createClient();
@@ -183,7 +200,7 @@ export function ShowcaseStudio({
               <div className="space-y-2">
                 <Label htmlFor="themeKey" className="text-slate-600">Tema visual</Label>
                 <Select id="themeKey" name="themeKey" value={themeKey} onChange={(event) => setThemeKey(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950">
-                  {themes.map((theme) => (
+                  {showcaseThemeOptions.map((theme) => (
                     <option key={theme.key} value={theme.key}>{theme.name}</option>
                   ))}
                 </Select>
@@ -262,9 +279,18 @@ export function ShowcaseStudio({
               <Input id="addressText" name="addressText" value={addressText} onChange={(event) => setAddressText(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
             </div>
 
-            <SubmitButton className="h-14 rounded-full bg-[var(--hp-accent)] text-base font-black text-[#04100a] hover:bg-emerald-400">
-              Salvar vitrine
-            </SubmitButton>
+            <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
+              <SubmitButton className="h-14 rounded-full bg-[var(--hp-accent)] text-base font-black text-[#04100a] hover:bg-emerald-400">
+                Salvar alteracoes
+              </SubmitButton>
+              <a href={publicUrl} target="_blank" rel="noreferrer" className="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-black text-slate-900">
+                <Eye className="h-4 w-4" />
+                Visualizar vitrine
+              </a>
+              <button type="button" onClick={resetToSaved} className="h-14 rounded-full border border-slate-200 bg-white px-5 text-sm font-black text-slate-700">
+                Cancelar alteracoes
+              </button>
+            </div>
           </form>
         </section>
 
@@ -274,7 +300,7 @@ export function ShowcaseStudio({
             <h2 className="text-2xl font-black">Templates visuais</h2>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {themes.map((theme) => (
+            {showcaseThemeOptions.map((theme) => (
               <button
                 key={theme.name}
                 type="button"
@@ -283,11 +309,25 @@ export function ShowcaseStudio({
                   theme.key === themeKey ? "border-emerald-400 bg-emerald-400/10" : "border-slate-200 bg-slate-50"
                 }`}
               >
-                <div className={`h-20 rounded-2xl bg-gradient-to-br ${theme.bg}`} />
+                <div
+                  className="h-20 rounded-2xl"
+                  style={{ background: `linear-gradient(135deg, ${theme.previewFrom}, ${theme.previewTo})` }}
+                />
                 <p className="mt-3 font-black">{theme.name}</p>
-                <p className="text-sm text-zinc-500">Clique para testar no preview.</p>
+                <p className="text-sm text-zinc-500">{theme.description}</p>
+                <span className="mt-3 inline-flex rounded-full bg-white px-3 py-2 text-xs font-black text-slate-900 shadow-sm">
+                  Aplicar tema
+                </span>
               </button>
             ))}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button type="button" onClick={restoreDefaultTheme} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700">
+              Restaurar padrao
+            </button>
+            <a href={publicUrl} target="_blank" rel="noreferrer" className="rounded-full bg-slate-950 px-4 py-2 text-sm font-black text-white">
+              Visualizar vitrine
+            </a>
           </div>
         </section>
 
@@ -339,8 +379,11 @@ export function ShowcaseStudio({
       </div>
 
       <aside className="grid gap-5 xl:sticky xl:top-32 xl:self-start">
-        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-50 shadow-2xl">
-          <div className={`min-h-48 bg-gradient-to-br ${selectedTheme.bg} p-4`}>
+        <section style={previewStyle} className="overflow-hidden rounded-[2rem] border border-slate-200 bg-[var(--store-card)] text-[var(--store-text)] shadow-2xl">
+          <div
+            className="min-h-48 p-4"
+            style={{ background: `linear-gradient(135deg, ${selectedTheme.previewFrom}, ${selectedTheme.previewTo})` }}
+          >
             {heroImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={heroImageUrl} alt="" className="h-48 w-full rounded-[1.5rem] object-cover" />
@@ -350,29 +393,29 @@ export function ShowcaseStudio({
               </div>
             )}
           </div>
-          <div className={`p-5 ${selectedTheme.text}`}>
+          <div className="p-5">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt="" className="-mt-14 mb-4 h-20 w-20 rounded-[1.5rem] border-4 border-white object-cover shadow-xl" />
             ) : null}
             <h3 className="text-3xl font-black">{title}</h3>
-            <p className="mt-2 text-sm font-semibold" style={{ color: selectedTheme.accent }}>{subtitle}</p>
-            <p className="mt-3 text-sm text-zinc-400">{description}</p>
+            <p className="mt-2 text-sm font-semibold text-[var(--store-primary)]">{subtitle}</p>
+            <p className="mt-3 text-sm text-[var(--store-muted)]">{description}</p>
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <a href={publicUrl} target="_blank" rel="noreferrer" className="rounded-full bg-[var(--hp-accent)] px-4 py-3 text-center font-black text-[#04100a]">
+              <a href={publicUrl} target="_blank" rel="noreferrer" className="rounded-full bg-[var(--store-primary)] px-4 py-3 text-center font-black text-[var(--store-primary-contrast)]">
                 Agendar
               </a>
-              <a href={whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, "")}` : "#"} className="rounded-full border border-slate-200 px-4 py-3 text-center font-black">
+              <a href={whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, "")}` : "#"} className="rounded-full border border-[var(--store-border)] px-4 py-3 text-center font-black">
                 WhatsApp
               </a>
             </div>
             <div className="mt-5 grid gap-3">
               {services.slice(0, 3).map((service) => (
-                <div key={service.id} className="rounded-2xl bg-slate-50 p-4">
+                <div key={service.id} className="rounded-2xl bg-[var(--store-bg-soft)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-black">{service.name}</p>
-                      <p className="mt-1 line-clamp-2 text-sm text-zinc-500">{service.description ?? "Servico disponivel para agendamento."}</p>
+                      <p className="mt-1 line-clamp-2 text-sm text-[var(--store-muted)]">{service.description ?? "Servico disponivel para agendamento."}</p>
                     </div>
                     <p className="shrink-0 text-sm font-black">{formatCurrency(service.price_cents)}</p>
                   </div>
