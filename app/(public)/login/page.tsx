@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type LoginPageProps = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -21,6 +21,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
       ) : null}
       <form action={signInAction} className="space-y-4">
+        <input type="hidden" name="next" value={query.next ?? ""} />
         <div className="space-y-2">
           <Label htmlFor="email">E-mail</Label>
           <Input id="email" name="email" type="email" autoComplete="email" required />

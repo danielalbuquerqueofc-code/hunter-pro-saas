@@ -75,12 +75,45 @@ function overlaps(start: Date, end: Date, busyStart: string, busyEnd: string) {
   return start < busyEndDate && end > busyStartDate;
 }
 
-function dateAt(date: string, time: string) {
-  return new Date(`${date}T${time}:00`);
+function splitDate(date: string) {
+  const [year, month, day] = date.split("-").map(Number);
+  return { year, month, day };
 }
 
-function getWeekday(date: string) {
-  return new Date(`${date}T12:00:00`).getDay();
+function getTimezoneOffsetMs(date: Date, timezone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  const asUtc = Date.UTC(
+    Number(values.year),
+    Number(values.month) - 1,
+    Number(values.day),
+    Number(values.hour),
+    Number(values.minute),
+    Number(values.second)
+  );
+  return asUtc - date.getTime();
+}
+
+function dateAt(date: string, time: string, timezone = "America/Fortaleza") {
+  const { year, month, day } = splitDate(date);
+  const [hour, minute] = time.slice(0, 5).split(":").map(Number);
+  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+  return new Date(utcGuess.getTime() - getTimezoneOffsetMs(utcGuess, timezone));
+}
+
+function getWeekday(date: string, timezone = "America/Fortaleza") {
+  const noon = dateAt(date, "12:00", timezone);
+  const weekday = new Intl.DateTimeFormat("en-US", { timeZone: timezone, weekday: "short" }).format(noon);
+  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(weekday);
 }
 
 export function getServiceMargins({
@@ -113,14 +146,15 @@ export function canBookDate({
   service: SchedulingService;
   now?: Date;
 }) {
+  const timezone = organization.timezone ?? "America/Fortaleza";
   const minNotice = service.booking_min_notice_minutes ?? organization.booking_min_notice_minutes ?? 120;
   const maxDays = service.booking_max_days_ahead ?? organization.booking_max_days_ahead ?? 30;
-  const dayStart = new Date(`${date}T00:00:00`);
+  const dayStart = dateAt(date, "00:00", timezone);
   const minDate = addMinutes(now, minNotice);
   const maxDate = new Date(now);
   maxDate.setDate(maxDate.getDate() + maxDays);
 
-  return dayStart <= maxDate && new Date(`${date}T23:59:59`) >= minDate;
+  return dayStart <= maxDate && addMinutes(dateAt(date, "23:59", timezone), 1) >= minDate;
 }
 
 export function calculateAvailabilitySlots({
@@ -150,7 +184,8 @@ export function calculateAvailabilitySlots({
 }) {
   if (!canBookDate({ date, organization, service, now })) return [];
 
-  const weekday = getWeekday(date);
+  const timezone = organization.timezone ?? "America/Fortaleza";
+  const weekday = getWeekday(date, timezone);
   const eligibleProfessionals = selectedProfessionalId
     ? professionals.filter((professional) => professional.id === selectedProfessionalId)
     : professionals;
@@ -175,9 +210,9 @@ export function calculateAvailabilitySlots({
 
       for (let minute = turnStart; minute + margins.before + service.duration_minutes + margins.after <= turnEnd; minute += interval) {
         const customerStartMinute = minute + margins.before;
-        const startsAt = dateAt(date, formatTime(customerStartMinute));
+        const startsAt = dateAt(date, formatTime(customerStartMinute), timezone);
         const endsAt = addMinutes(startsAt, service.duration_minutes);
-        const occupiedStartsAt = dateAt(date, formatTime(minute));
+        const occupiedStartsAt = dateAt(date, formatTime(minute), timezone);
         const occupiedEndsAt = addMinutes(occupiedStartsAt, margins.total);
 
         if (startsAt < addMinutes(now, service.booking_min_notice_minutes ?? organization.booking_min_notice_minutes ?? 120)) {

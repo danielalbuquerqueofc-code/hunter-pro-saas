@@ -36,7 +36,7 @@ Permissoes devem ser verificadas por organizacao.
 - Usar Next.js App Router.
 - Usar TypeScript.
 - Usar Zod para validacao.
-- Usar React Hook Form para formularios.
+- Usar Server Actions com validacao Zod para formularios, salvo quando uma tela realmente justificar uma biblioteca de formulario.
 - Usar shadcn/ui para componentes base.
 - Usar Tailwind CSS para estilo.
 - Criar componentes pequenos e reutilizaveis.

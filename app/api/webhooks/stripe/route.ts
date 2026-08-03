@@ -1,16 +1,9 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { env } from "@/lib/env";
+import { mapSubscriptionToAccessStatus, normalizeStripeSubscriptionStatus } from "@/lib/billing-status";
 import { createStripeClient } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-function subscriptionStatus(status?: string | null) {
-  if (status === "active") return "ACTIVE";
-  if (status === "trialing") return "TRIALING";
-  if (status === "past_due" || status === "unpaid") return "PAST_DUE";
-  if (status === "canceled" || status === "incomplete_expired") return "CANCELED";
-  return "TRIALING";
-}
 
 export async function POST(request: Request) {
   if (!env.stripeWebhookSecret) {
@@ -80,7 +73,7 @@ export async function POST(request: Request) {
     const subscription = event.data.object as Stripe.Subscription;
     const organizationId = subscription.metadata?.organization_id;
     const planId = subscription.metadata?.plan_id;
-    const status = subscriptionStatus(subscription.status);
+    const status = normalizeStripeSubscriptionStatus(subscription.status);
 
     if (organizationId && planId) {
       await supabase
@@ -88,7 +81,7 @@ export async function POST(request: Request) {
         .update({
           plan_id: planId,
           subscription_status: status,
-          access_status: status === "ACTIVE" || status === "TRIALING" ? "active" : status === "PAST_DUE" ? "overdue" : "cancelled",
+          access_status: mapSubscriptionToAccessStatus(status),
           stripe_customer_id: typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id
         })
         .eq("id", organizationId);

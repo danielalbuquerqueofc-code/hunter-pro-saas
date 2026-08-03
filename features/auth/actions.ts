@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { env } from "@/lib/env";
+import { getSafeInternalPath } from "@/lib/safe-redirect";
 import { signInSchema, signUpSchema } from "@/lib/validations/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,6 +28,7 @@ export async function signInAction(formData: FormData) {
     email: formData.get("email"),
     password: formData.get("password")
   });
+  const next = getSafeInternalPath(formData.get("next"));
 
   if (!parsed.success) {
     redirectWithError("/login", parsed.error.errors[0]?.message ?? "Dados invalidos.");
@@ -42,7 +44,7 @@ export async function signInAction(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  redirect(next);
 }
 
 export async function requestPasswordRecoveryAction(formData: FormData) {

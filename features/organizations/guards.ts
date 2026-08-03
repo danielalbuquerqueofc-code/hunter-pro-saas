@@ -3,6 +3,7 @@ import { redirectIfOrganizationCannotUseApp } from "@/features/organizations/acc
 import { getCurrentOrganization } from "@/features/organizations/current";
 import { requireUser } from "@/lib/auth";
 import type { Role } from "@/lib/constants/roles";
+import { getModuleByHref } from "@/lib/modules";
 
 type OrganizationAccess = {
   user: Awaited<ReturnType<typeof requireUser>>;
@@ -30,4 +31,15 @@ export async function requireOrganizationAccess(allowedRoles?: Role[]): Promise<
     organization: current.organization,
     role
   };
+}
+
+export async function requireEnabledOrganizationModuleAccess(href: string, allowedRoles?: Role[]) {
+  const context = await requireOrganizationAccess(allowedRoles);
+  const moduleItem = getModuleByHref(href);
+
+  if (moduleItem?.status === "disabled") {
+    redirect(`/dashboard?error=${encodeURIComponent("Modulo ainda nao liberado para uso comercial.")}`);
+  }
+
+  return context;
 }

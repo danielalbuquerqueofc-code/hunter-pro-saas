@@ -35,8 +35,8 @@ const failures = [];
 
 for (const relativePath of requiredGuardFiles) {
   const source = readFileSync(join(root, relativePath), "utf8");
-  if (!source.includes("requireOrganizationAccess(")) {
-    failures.push(`${relativePath} nao chama requireOrganizationAccess.`);
+  if (!source.includes("requireOrganizationAccess(") && !source.includes("requireEnabledOrganizationModuleAccess(")) {
+    failures.push(`${relativePath} nao chama guard de organizacao.`);
   }
 }
 
@@ -96,9 +96,10 @@ if (!blockedPage.includes("signOutAction") || !blockedPage.includes("/precos")) 
   failures.push("Tela de acesso bloqueado nao oferece saida e caminho de plano.");
 }
 
-const adminPage = readFileSync(join(root, "app/admin/page.tsx"), "utf8");
-if (!adminPage.includes("requireSuperAdmin") || !adminPage.includes("updateOrganizationAccessAction")) {
-  failures.push("Admin global nao possui acoes de controle de acesso.");
+const adminLayout = readFileSync(join(root, "app/admin/layout.tsx"), "utf8");
+const adminCompanyDetail = readFileSync(join(root, "app/admin/empresas/[id]/page.tsx"), "utf8");
+if (!adminLayout.includes("requireSuperAdmin") || !adminCompanyDetail.includes("updateOrganizationAccessAction")) {
+  failures.push("Admin global nao possui protecao SUPER_ADMIN e acoes de controle de acesso.");
 }
 
 const accessMigration = readFileSync(

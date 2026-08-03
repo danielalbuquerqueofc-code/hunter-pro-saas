@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentOrganization } from "@/features/organizations/current";
 
 function startOfDay(date: Date) {
   const copy = new Date(date);
@@ -26,23 +27,14 @@ function normalizeRelation<T>(value: T | T[] | null | undefined): T | null {
 export async function getDashboardData(userId: string) {
   const supabase = await createClient();
 
-  const { data: membership } = await supabase
-    .from("organization_members")
-    .select("role, organization:organizations(id,name,slug,status,subscription_status,access_status,trial_started_at,trial_ends_at,activated_at,blocked_at,blocked_reason)")
-    .eq("user_id", userId)
-    .eq("status", "ACTIVE")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  const organization = Array.isArray(membership?.organization)
-    ? membership?.organization[0]
-    : membership?.organization;
+  const current = await getCurrentOrganization(userId);
+  const organization = current.organization;
 
   if (!organization) {
     return {
       organization: null,
       role: null,
+      impersonation: null,
       stats: {
         members: 0,
         activePlan: "Sem plano",
@@ -181,7 +173,8 @@ export async function getDashboardData(userId: string) {
 
   return {
     organization,
-    role: membership?.role ?? null,
+    role: current.role ?? null,
+    impersonation: current.impersonation ?? null,
     stats: {
       members: members ?? 0,
       activePlan: plan?.name ?? "Free",

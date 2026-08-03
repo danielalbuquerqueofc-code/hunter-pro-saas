@@ -113,7 +113,7 @@ export async function getOrganizationPlanUsage(supabase: SupabaseClient, organiz
       .from("organization_members")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId)
-      .in("status", ["ACTIVE", "INVITED"]),
+      .in("status", ["ACTIVE", "PENDING"]),
     supabase
       .from("organization_invitations")
       .select("id", { count: "exact", head: true })

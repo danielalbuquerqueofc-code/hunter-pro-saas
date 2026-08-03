@@ -21,6 +21,10 @@ if (!source.includes("redirect(`/acesso-bloqueado")) {
   failures.push("Redirecionamento para acesso bloqueado nao foi encontrado.");
 }
 
+if (!source.includes('organization.subscription_status === "PAST_DUE"')) {
+  failures.push("Assinaturas PAST_DUE precisam bloquear o acesso operacional.");
+}
+
 if (failures.length > 0) {
   console.error("Falhas nos testes de acesso:");
   for (const failure of failures) {

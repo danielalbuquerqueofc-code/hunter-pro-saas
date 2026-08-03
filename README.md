@@ -17,7 +17,7 @@ O Hunter Pro deve permitir que cada empresa tenha uma conta isolada, usuarios pr
 - Supabase Storage
 - Row Level Security
 - Zod
-- React Hook Form
+- Formularios com Server Actions e validacao Zod
 - Vercel
 - Estrutura preparada para PWA
 
@@ -155,10 +155,17 @@ Regras atuais:
 
 - `trial`: usa o sistema ate `trial_ends_at`.
 - `active`: usa normalmente.
+- `suspended`: nao acessa o painel. Usado tambem quando assinatura fica `PAST_DUE`.
 - `trial_expired`: nao acessa o painel.
 - `blocked`: nao acessa o painel.
-- `suspended`: nao acessa o painel.
 - `cancelled`: nao acessa o painel.
+
+Status de membros:
+
+- `PENDING`: convite enviado, ainda sem acesso operacional.
+- `ACTIVE`: convite aceito e usuario liberado.
+- `SUSPENDED`: membro desativado.
+- `REMOVED`: membro removido logicamente.
 
 Migration relacionada:
 

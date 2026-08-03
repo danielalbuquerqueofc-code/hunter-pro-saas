@@ -24,6 +24,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       organizationSlug={dashboard.organization?.slug}
       role={dashboard.role}
       isSuperAdmin={Boolean(profile?.is_super_admin)}
+      impersonation={dashboard.impersonation}
     >
       {children}
     </AppShell>

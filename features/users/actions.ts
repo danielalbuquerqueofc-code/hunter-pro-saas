@@ -10,7 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const COMPANY_ROLES: Role[] = ["OWNER", "ADMIN", "MANAGER", "SALES", "ATTENDANT", "PROFESSIONAL", "FINANCIAL"];
-const MEMBER_STATUSES = ["ACTIVE", "INVITED", "SUSPENDED"] as const;
+const MEMBER_STATUSES = ["PENDING", "ACTIVE", "SUSPENDED", "REMOVED"] as const;
 
 function normalizeRole(value: FormDataEntryValue | null): Role {
   const role = String(value ?? "");
@@ -142,8 +142,9 @@ export async function inviteOrganizationUserAction(formData: FormData) {
       organization_id: organization.id,
       user_id: invite.user.id,
       role,
-      status: "ACTIVE",
-      invited_by: user.id
+      status: "PENDING",
+      invited_by: user.id,
+      invitation_expires_at: new Date(Date.now() + 7 * 86_400_000).toISOString()
     },
     { onConflict: "organization_id,user_id" }
   );

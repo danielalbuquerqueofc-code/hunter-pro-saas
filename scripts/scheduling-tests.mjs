@@ -15,6 +15,8 @@ assertIncludes(availabilityFile, "FIXED_GRID", "fixed grid mode exists");
 assertIncludes(availabilityFile, "minute + margins.before + service.duration_minutes + margins.after <= turnEnd", "service must fit inside one turn");
 assertIncludes(availabilityFile, "blockedTimes", "pauses/vacations/holidays block slots");
 assertIncludes(availabilityFile, "googleBusy", "Google busy blocks are supported by the algorithm");
+assertIncludes(availabilityFile, "America/Fortaleza", "availability must use an explicit Brazil timezone fallback");
+assertIncludes(availabilityFile, "getTimezoneOffsetMs", "availability must convert organization local time to UTC");
 assertIncludes(storefrontFile, "/api/public/availability", "public showcase loads server-side availability");
 assertIncludes(storefrontFile, "/api/public/holds", "public showcase creates temporary holds");
 assertIncludes(storefrontFile, "consentWhatsapp", "WhatsApp consent is captured");

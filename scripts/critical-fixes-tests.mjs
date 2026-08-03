@@ -33,13 +33,31 @@ assertIncludes(accountActions, 'revalidatePath("/dashboard")', "account update m
 const userActions = read("features/users/actions.ts");
 assertIncludes(userActions, "/auth/callback?next=/definir-senha", "invite redirect must use the Supabase callback");
 assertIncludes(userActions, "env.appUrl", "invite redirect must use the configured production URL");
+assertIncludes(userActions, 'status: "PENDING"', "invited members must stay pending until the callback accepts the invitation");
+assertNotIncludes(userActions, 'status: "ACTIVE",\n      invited_by: user.id', "invite action must not create active members before acceptance");
 
 const authActions = read("features/auth/actions.ts");
 assertIncludes(authActions, "requestPasswordRecoveryAction", "password recovery action must exist");
 assertIncludes(authActions, "definePasswordAction", "define password action must exist");
 assertIncludes(authActions, "/auth/callback?next=/definir-senha", "password recovery must use the callback route");
+assertIncludes(authActions, "getSafeInternalPath", "login must validate next redirects");
+assertIncludes(authActions, "redirect(next)", "login must redirect to the validated next path");
+
+const stripeWebhook = read("app/api/webhooks/stripe/route.ts");
+assertIncludes(stripeWebhook, "mapSubscriptionToAccessStatus", "stripe webhook must use the shared access status mapping");
+assertNotIncludes(stripeWebhook, "overdue", "stripe webhook must not write unsupported overdue access status");
+
+const accessControl = read("features/organizations/access-control.ts");
+assertIncludes(accessControl, 'organization.subscription_status === "PAST_DUE"', "past due subscriptions must block access");
+
+const proxy = read("proxy.ts");
+assertIncludes(proxy, "status: 503", "private routes must fail closed when Supabase env is missing");
+assertIncludes(proxy, "Hunter Pro proxy misconfigured", "proxy must log a safe server-side configuration error");
 
 assert(existsSync(path.join(root, "app/(public)/auth/callback/route.ts")), "Supabase auth callback route must exist");
+const callback = read("app/(public)/auth/callback/route.ts");
+assertIncludes(callback, 'status: "ACTIVE"', "callback must activate pending members after a valid invite login");
+assertIncludes(callback, 'status", "PENDING"', "callback must only activate pending members");
 assert(existsSync(path.join(root, "app/(public)/definir-senha/page.tsx")), "define password page must exist");
 assert(existsSync(path.join(root, "app/(public)/recuperar-senha/page.tsx")), "password recovery page must exist");
 assert(existsSync(path.join(root, "app/manifest.ts")), "PWA manifest route must exist");

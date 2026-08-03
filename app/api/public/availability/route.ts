@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { calculateAvailabilitySlots } from "@/features/scheduling/availability";
+import { getGoogleCalendarBusyTimes } from "@/features/scheduling/google-busy";
 import { getPublicShowcase } from "@/features/showcase/queries";
 
 type BusyAppointment = {
@@ -36,6 +37,16 @@ export async function GET(request: Request) {
   const professionals = linkedProfessionalIds.length
     ? data.professionals.filter((professional) => linkedProfessionalIds.includes(professional.id))
     : data.professionals;
+  const timezone = data.organization.timezone ?? "America/Fortaleza";
+  const rangeStart = new Date(`${date}T00:00:00.000Z`);
+  const rangeEnd = new Date(`${date}T23:59:59.999Z`);
+  rangeEnd.setUTCDate(rangeEnd.getUTCDate() + 1);
+  const googleBusy = await getGoogleCalendarBusyTimes({
+    organizationId: data.organization.id,
+    professionalIds: professionals.map((professional) => professional.id),
+    startsAt: rangeStart.toISOString(),
+    endsAt: rangeEnd.toISOString()
+  });
 
   const slots = calculateAvailabilitySlots({
     date,
@@ -54,12 +65,13 @@ export async function GET(request: Request) {
       starts_at: hold.occupied_starts_at,
       ends_at: hold.occupied_ends_at
     })),
-    selectedProfessionalId: professionalId
+    selectedProfessionalId: professionalId,
+    googleBusy
   });
 
   return NextResponse.json({
     ok: true,
-    timezone: data.organization.timezone ?? "America/Sao_Paulo",
+    timezone,
     slotMode: data.organization.booking_slot_mode ?? "FIXED_GRID",
     slots
   });

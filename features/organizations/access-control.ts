@@ -62,6 +62,7 @@ export function getOrganizationAccessState(
 
   if (organization.status === "SUSPENDED") status = "suspended";
   if (organization.status === "CANCELED") status = "cancelled";
+  if (organization.subscription_status === "PAST_DUE") status = "suspended";
   if (organization.subscription_status === "CANCELED") status = "cancelled";
 
   const trialEndsAt = organization.trial_ends_at ?? null;

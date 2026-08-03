@@ -16,9 +16,20 @@ type ReminderJob = {
     customer_phone: string;
     starts_at: string;
     status_v2: string;
+    consent_whatsapp: boolean | null;
     service: { name: string; duration_minutes: number } | null;
     professional: { name: string } | null;
-    organization: { name: string; whatsapp: string | null; timezone: string | null; status: string } | null;
+    organization: {
+      name: string;
+      whatsapp: string | null;
+      timezone: string | null;
+      status: string;
+      access_status: string | null;
+      subscription_status: string | null;
+      quiet_hours_start: string | null;
+      quiet_hours_end: string | null;
+      quiet_hours_policy: string | null;
+    } | null;
   } | null;
 };
 
@@ -48,6 +59,57 @@ function renderWhatsappMessage(job: ReminderJob) {
     "",
     "Enviaremos lembretes antes do atendimento conforme configurado."
   ].join("\n");
+}
+
+const BLOCKED_ACCESS_STATUSES = new Set(["suspended", "trial_expired", "blocked", "cancelled"]);
+const BLOCKED_APPOINTMENT_STATUSES = new Set(["cancelled_by_customer", "cancelled_by_company", "completed", "no_show"]);
+
+function isValidPhone(value: string | null | undefined) {
+  return (value ?? "").replace(/\D/g, "").length >= 10;
+}
+
+function minutesFromTime(value: string | null | undefined) {
+  if (!value) return null;
+  const [hour, minute] = value.slice(0, 5).split(":").map(Number);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+  return hour * 60 + minute;
+}
+
+function getLocalMinutes(date: Date, timezone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).formatToParts(date);
+  const hour = Number(parts.find((part) => part.type === "hour")?.value ?? 0);
+  const minute = Number(parts.find((part) => part.type === "minute")?.value ?? 0);
+  return hour * 60 + minute;
+}
+
+function isWithinQuietHours(job: ReminderJob, now = new Date()) {
+  const organization = job.appointment?.organization;
+  const start = minutesFromTime(organization?.quiet_hours_start);
+  const end = minutesFromTime(organization?.quiet_hours_end);
+  if (start === null || end === null || start === end) return false;
+
+  const localMinutes = getLocalMinutes(now, organization?.timezone ?? "America/Fortaleza");
+  if (start < end) return localMinutes >= start && localMinutes < end;
+  return localMinutes >= start || localMinutes < end;
+}
+
+function getSkipReason(job: ReminderJob) {
+  const organization = job.appointment?.organization;
+  const appointment = job.appointment;
+
+  if (!organization || organization.status !== "ACTIVE") return "Empresa indisponivel.";
+  if (BLOCKED_ACCESS_STATUSES.has(organization.access_status ?? "")) return "Acesso da empresa bloqueado.";
+  if (organization.subscription_status === "PAST_DUE" || organization.subscription_status === "CANCELED") return "Assinatura indisponivel.";
+  if (!appointment || BLOCKED_APPOINTMENT_STATUSES.has(appointment.status_v2) || appointment.status_v2?.startsWith("cancelled")) return "Agendamento indisponivel.";
+  if (job.channel === "WHATSAPP" && !appointment.consent_whatsapp) return "Cliente sem consentimento para WhatsApp.";
+  if (job.channel === "WHATSAPP" && !isValidPhone(appointment.customer_phone)) return "Telefone do cliente invalido.";
+  if (isWithinQuietHours(job)) return "Janela de silencio ativa.";
+  return null;
 }
 
 async function sendWhatsapp(job: ReminderJob) {
@@ -97,9 +159,10 @@ export async function GET(request: Request) {
         customer_phone,
         starts_at,
         status_v2,
+        consent_whatsapp,
         service:services(name,duration_minutes),
         professional:professionals(name),
-        organization:organizations(name,whatsapp,timezone,status)
+        organization:organizations(name,whatsapp,timezone,status,access_status,subscription_status,quiet_hours_start,quiet_hours_end,quiet_hours_policy)
       )
     `)
     .eq("status", "SCHEDULED")
@@ -129,8 +192,9 @@ export async function GET(request: Request) {
 
     if (!locked) continue;
 
-    if (job.appointment?.organization?.status !== "ACTIVE" || job.appointment?.status_v2?.startsWith("cancelled")) {
-      await supabase.from("reminder_jobs").update({ status: "SKIPPED", error_message: "Empresa ou agendamento indisponivel." }).eq("id", job.id);
+    const skipReason = getSkipReason(job);
+    if (skipReason) {
+      await supabase.from("reminder_jobs").update({ status: "SKIPPED", error_message: skipReason }).eq("id", job.id);
       processed.push({ id: job.id, status: "SKIPPED" });
       continue;
     }

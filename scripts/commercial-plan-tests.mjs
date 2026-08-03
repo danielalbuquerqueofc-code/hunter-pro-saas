@@ -44,7 +44,7 @@ for (const plan of [
 
 assertIncludes(migration, "create table if not exists public.plan_change_history", "Historico de troca de plano precisa existir.");
 assertIncludes(limits, "assertCanAddOrganizationUser", "Helper precisa validar limite antes de convidar usuario.");
-assertIncludes(limits, ".in(\"status\", [\"ACTIVE\", \"INVITED\"])", "Membros ativos/convidados precisam ocupar vaga.");
+assertIncludes(limits, ".in(\"status\", [\"ACTIVE\", \"PENDING\"])", "Membros ativos/pendentes precisam ocupar vaga.");
 assertIncludes(limits, ".eq(\"status\", \"SENT\")", "Convites pendentes precisam reservar vaga.");
 assertIncludes(usersActions, "assertCanAddOrganizationUser", "Convite precisa chamar validacao de limite no backend.");
 assertIncludes(usersActions, "Ja existe um convite pendente", "Convite duplicado precisa ser bloqueado.");

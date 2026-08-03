@@ -17,9 +17,10 @@ type UsuariosPageProps = {
 
 const COMPANY_ROLES = ROLES.filter((role) => role !== "SUPER_ADMIN");
 const STATUS_LABEL: Record<string, string> = {
+  PENDING: "Pendente",
   ACTIVE: "Ativo",
-  INVITED: "Convidado",
-  SUSPENDED: "Desativado"
+  SUSPENDED: "Desativado",
+  REMOVED: "Removido"
 };
 
 export default async function UsuariosPage({ searchParams }: UsuariosPageProps) {
@@ -136,8 +137,9 @@ export default async function UsuariosPage({ searchParams }: UsuariosPageProps) 
                       <Label htmlFor={`status-${member.id}`}>Status</Label>
                       <Select id={`status-${member.id}`} name="status" defaultValue={member.status}>
                         <option value="ACTIVE">Ativo</option>
-                        <option value="INVITED">Convidado</option>
+                        <option value="PENDING">Pendente</option>
                         <option value="SUSPENDED">Desativado</option>
+                        <option value="REMOVED">Removido</option>
                       </Select>
                     </div>
                     <Button type="submit" variant="secondary">Salvar</Button>

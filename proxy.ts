@@ -45,7 +45,13 @@ export async function proxy(request: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    return response;
+    console.error("Hunter Pro proxy misconfigured: missing Supabase public URL or anon key.");
+    return new NextResponse("Configuracao indisponivel.", {
+      status: 503,
+      headers: {
+        "Cache-Control": "no-store"
+      }
+    });
   }
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
