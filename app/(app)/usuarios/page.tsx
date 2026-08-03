@@ -9,7 +9,7 @@ import { formatPlanPrice, getOrganizationPlanUsage } from "@/features/billing/pl
 import { requireOrganizationAccess } from "@/features/organizations/guards";
 import { inviteOrganizationUserAction, updateOrganizationMemberAction } from "@/features/users/actions";
 import { ROLES } from "@/lib/constants/roles";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 type UsuariosPageProps = {
   searchParams: Promise<{ success?: string; error?: string }>;
@@ -26,15 +26,15 @@ const STATUS_LABEL: Record<string, string> = {
 export default async function UsuariosPage({ searchParams }: UsuariosPageProps) {
   const query = await searchParams;
   const { organization } = await requireOrganizationAccess(["OWNER", "ADMIN"]);
-  const supabase = await createClient();
-  const planUsage = await getOrganizationPlanUsage(supabase, organization.id);
+  const admin = createAdminClient();
+  const planUsage = await getOrganizationPlanUsage(admin, organization.id);
 
-  const { data: members } = await supabase
+  const { data: members } = await admin
     .from("organization_members")
     .select("id,user_id,role,status,created_at,profile:profiles(full_name,phone,avatar_url)")
     .eq("organization_id", organization.id)
     .order("created_at", { ascending: true });
-  const { data: invitations } = await supabase
+  const { data: invitations } = await admin
     .from("organization_invitations")
     .select("id,email,role,status,provider_error,created_at")
     .eq("organization_id", organization.id)
