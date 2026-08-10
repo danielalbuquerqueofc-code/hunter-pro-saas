@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { showcaseLinkSchema, showcaseSchema } from "@/lib/validations/showcase";
@@ -12,17 +13,51 @@ export type ShowcaseActionState = {
   error?: string;
 };
 
-export async function saveShowcaseAction(formData: FormData) {
-  const user = await requireUser();
-  const { organization } = await getCurrentOrganization(user.id);
-  if (!organization) throw new Error("Cadastre uma empresa antes de criar a vitrine.");
+type ShowcaseFormValues = z.infer<typeof showcaseSchema>;
+const defaultSectionVisibility = {
+  hero: true,
+  trust: true,
+  about: true,
+  services: true,
+  professionals: true,
+  gallery: true,
+  reviews: true,
+  promotions: true,
+  contact: true,
+  hours: true,
+  payments: true,
+  links: true,
+  cta: true,
+  footer: true
+};
+const defaultSectionOrder = [
+  "hero",
+  "trust",
+  "about",
+  "services",
+  "professionals",
+  "gallery",
+  "reviews",
+  "promotions",
+  "contact",
+  "hours",
+  "payments",
+  "links",
+  "cta",
+  "footer"
+];
 
-  const parsed = showcaseSchema.safeParse({
+function parseShowcaseForm(formData: FormData) {
+  return showcaseSchema.safeParse({
     title: formData.get("title"),
     subtitle: formData.get("subtitle"),
     description: formData.get("description"),
+    commercialName: formData.get("commercialName"),
+    slogan: formData.get("slogan"),
     heroImageUrl: formData.get("heroImageUrl"),
     logoUrl: formData.get("logoUrl"),
+    profileImageUrl: formData.get("profileImageUrl"),
+    faviconUrl: formData.get("faviconUrl"),
     whatsapp: formData.get("whatsapp"),
     phone: formData.get("phone"),
     instagramUrl: formData.get("instagramUrl"),
@@ -30,35 +65,86 @@ export async function saveShowcaseAction(formData: FormData) {
     tiktokUrl: formData.get("tiktokUrl"),
     youtubeUrl: formData.get("youtubeUrl"),
     addressText: formData.get("addressText"),
+    serviceArea: formData.get("serviceArea"),
+    openingHoursText: formData.get("openingHoursText"),
+    paymentMethodsText: formData.get("paymentMethodsText"),
     primaryColor: formData.get("primaryColor"),
+    accentColor: formData.get("accentColor"),
+    backgroundColor: formData.get("backgroundColor"),
+    cardColor: formData.get("cardColor"),
+    textColor: formData.get("textColor"),
+    buttonColor: formData.get("buttonColor"),
+    buttonTextColor: formData.get("buttonTextColor"),
+    borderColor: formData.get("borderColor"),
+    ctaPrimaryText: formData.get("ctaPrimaryText"),
+    ctaSecondaryText: formData.get("ctaSecondaryText"),
+    radiusStyle: formData.get("radiusStyle"),
+    shadowStyle: formData.get("shadowStyle"),
     themeKey: formData.get("themeKey"),
     fontKey: formData.get("fontKey"),
+    sectionVisibility: formData.get("sectionVisibility"),
+    sectionOrder: formData.get("sectionOrder"),
     status: formData.get("status")
   });
+}
+
+function showcasePayload(parsed: ShowcaseFormValues, organizationId: string, userId: string) {
+  const now = new Date().toISOString();
+  return {
+    organization_id: organizationId,
+    title: parsed.title,
+    subtitle: parsed.subtitle || null,
+    description: parsed.description || null,
+    commercial_name: parsed.commercialName || null,
+    slogan: parsed.slogan || null,
+    hero_image_url: parsed.heroImageUrl || null,
+    logo_url: parsed.logoUrl || null,
+    profile_image_url: parsed.profileImageUrl || null,
+    favicon_url: parsed.faviconUrl || null,
+    whatsapp: parsed.whatsapp || null,
+    phone: parsed.phone || null,
+    instagram_url: parsed.instagramUrl || null,
+    facebook_url: parsed.facebookUrl || null,
+    tiktok_url: parsed.tiktokUrl || null,
+    youtube_url: parsed.youtubeUrl || null,
+    address_text: parsed.addressText || null,
+    service_area: parsed.serviceArea || null,
+    opening_hours_text: parsed.openingHoursText || null,
+    payment_methods_text: parsed.paymentMethodsText || null,
+    primary_color: parsed.primaryColor || null,
+    accent_color: parsed.accentColor || null,
+    background_color: parsed.backgroundColor || null,
+    card_color: parsed.cardColor || null,
+    text_color: parsed.textColor || null,
+    button_color: parsed.buttonColor || null,
+    button_text_color: parsed.buttonTextColor || null,
+    border_color: parsed.borderColor || null,
+    cta_primary_text: parsed.ctaPrimaryText || "Agendar agora",
+    cta_secondary_text: parsed.ctaSecondaryText || "Falar no WhatsApp",
+    radius_style: parsed.radiusStyle,
+    shadow_style: parsed.shadowStyle,
+    theme_key: parsed.themeKey,
+    font_key: parsed.fontKey,
+    section_visibility: { ...defaultSectionVisibility, ...(parsed.sectionVisibility ?? {}) },
+    section_order: parsed.sectionOrder?.length ? parsed.sectionOrder : defaultSectionOrder,
+    status: parsed.status,
+    updated_by: userId,
+    published_at: parsed.status === "PUBLISHED" ? now : null
+  };
+}
+
+export async function saveShowcaseAction(formData: FormData) {
+  const user = await requireUser();
+  const { organization } = await getCurrentOrganization(user.id);
+  if (!organization) throw new Error("Cadastre uma empresa antes de criar a vitrine.");
+
+  const parsed = parseShowcaseForm(formData);
 
   if (!parsed.success) throw new Error(parsed.error.errors[0]?.message ?? "Dados invalidos.");
 
   const supabase = await createClient();
   const { error } = await supabase.from("showcases").upsert(
-    {
-      organization_id: organization.id,
-      title: parsed.data.title,
-      subtitle: parsed.data.subtitle || null,
-      description: parsed.data.description || null,
-      hero_image_url: parsed.data.heroImageUrl || null,
-      logo_url: parsed.data.logoUrl || null,
-      whatsapp: parsed.data.whatsapp || null,
-      phone: parsed.data.phone || null,
-      instagram_url: parsed.data.instagramUrl || null,
-      facebook_url: parsed.data.facebookUrl || null,
-      tiktok_url: parsed.data.tiktokUrl || null,
-      youtube_url: parsed.data.youtubeUrl || null,
-      address_text: parsed.data.addressText || null,
-      primary_color: parsed.data.primaryColor || null,
-      theme_key: parsed.data.themeKey,
-      font_key: parsed.data.fontKey,
-      status: parsed.data.status
-    },
+    showcasePayload(parsed.data, organization.id, user.id),
     { onConflict: "organization_id" }
   );
 
@@ -80,24 +166,7 @@ export async function saveShowcaseStateAction(
     return { ok: false, error: "Cadastre sua empresa antes de criar a vitrine." };
   }
 
-  const parsed = showcaseSchema.safeParse({
-    title: formData.get("title"),
-    subtitle: formData.get("subtitle"),
-    description: formData.get("description"),
-    heroImageUrl: formData.get("heroImageUrl"),
-    logoUrl: formData.get("logoUrl"),
-    whatsapp: formData.get("whatsapp"),
-    phone: formData.get("phone"),
-    instagramUrl: formData.get("instagramUrl"),
-    facebookUrl: formData.get("facebookUrl"),
-    tiktokUrl: formData.get("tiktokUrl"),
-    youtubeUrl: formData.get("youtubeUrl"),
-    addressText: formData.get("addressText"),
-    primaryColor: formData.get("primaryColor"),
-    themeKey: formData.get("themeKey"),
-    fontKey: formData.get("fontKey"),
-    status: formData.get("status")
-  });
+  const parsed = parseShowcaseForm(formData);
 
   if (!parsed.success) {
     return { ok: false, error: parsed.error.errors[0]?.message ?? "Revise os dados da vitrine." };
@@ -105,25 +174,7 @@ export async function saveShowcaseStateAction(
 
   const supabase = await createClient();
   const { error } = await supabase.from("showcases").upsert(
-    {
-      organization_id: organization.id,
-      title: parsed.data.title,
-      subtitle: parsed.data.subtitle || null,
-      description: parsed.data.description || null,
-      hero_image_url: parsed.data.heroImageUrl || null,
-      logo_url: parsed.data.logoUrl || null,
-      whatsapp: parsed.data.whatsapp || null,
-      phone: parsed.data.phone || null,
-      instagram_url: parsed.data.instagramUrl || null,
-      facebook_url: parsed.data.facebookUrl || null,
-      tiktok_url: parsed.data.tiktokUrl || null,
-      youtube_url: parsed.data.youtubeUrl || null,
-      address_text: parsed.data.addressText || null,
-      primary_color: parsed.data.primaryColor || null,
-      theme_key: parsed.data.themeKey,
-      font_key: parsed.data.fontKey,
-      status: parsed.data.status
-    },
+    showcasePayload(parsed.data, organization.id, user.id),
     { onConflict: "organization_id" }
   );
 

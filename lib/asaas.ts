@@ -25,6 +25,19 @@ export type AsaasSubscriptionInput = {
   externalReference: string;
 };
 
+export type BillingProvider = {
+  createCustomer(input: AsaasCustomerInput): Promise<{ id: string }>;
+  updateCustomer(customerId: string, input: Partial<AsaasCustomerInput>): Promise<{ id: string }>;
+  createSubscription(input: AsaasSubscriptionInput): Promise<{ id: string; customer: string; status?: string; invoiceUrl?: string; bankSlipUrl?: string }>;
+  updateSubscription(subscriptionId: string, input: Partial<AsaasSubscriptionInput>): Promise<{ id: string; status?: string }>;
+  cancelSubscription(subscriptionId: string): Promise<{ id: string; status?: string }>;
+  reactivateSubscription(subscriptionId: string): Promise<{ id: string; status?: string }>;
+  getSubscription(subscriptionId: string): Promise<{ id: string; status?: string }>;
+  listPayments(subscriptionId: string): Promise<{ data?: unknown[] }>;
+  getPayment(paymentId: string): Promise<{ id: string; status?: string; invoiceUrl?: string; bankSlipUrl?: string }>;
+  createPaymentLink(input: Record<string, unknown>): Promise<{ id: string; url?: string }>;
+};
+
 export function getAsaasEnvironment(): AsaasEnvironment {
   return env.asaasEnvironment === "production" ? "production" : "sandbox";
 }
@@ -34,6 +47,7 @@ export function hasAsaasEnv() {
 }
 
 export function getAsaasBaseUrl() {
+  if (process.env.ASAAS_BASE_URL) return process.env.ASAAS_BASE_URL.replace(/\/$/, "");
   return getAsaasEnvironment() === "production"
     ? "https://api.asaas.com/v3"
     : "https://api-sandbox.asaas.com/v3";
@@ -82,6 +96,19 @@ export async function createAsaasCustomer(input: AsaasCustomerInput) {
   });
 }
 
+export async function updateAsaasCustomer(customerId: string, input: Partial<AsaasCustomerInput>) {
+  return asaasRequest<{ id: string }>(`/customers/${customerId}`, {
+    method: "PUT",
+    body: {
+      name: input.name,
+      email: input.email || undefined,
+      mobilePhone: input.mobilePhone || undefined,
+      cpfCnpj: input.cpfCnpj || undefined,
+      externalReference: input.externalReference
+    }
+  });
+}
+
 export async function createAsaasSubscription(input: AsaasSubscriptionInput) {
   return asaasRequest<{
     id: string;
@@ -94,3 +121,54 @@ export async function createAsaasSubscription(input: AsaasSubscriptionInput) {
     body: input
   });
 }
+
+export async function updateAsaasSubscription(subscriptionId: string, input: Partial<AsaasSubscriptionInput>) {
+  return asaasRequest<{ id: string; status?: string }>(`/subscriptions/${subscriptionId}`, {
+    method: "PUT",
+    body: input
+  });
+}
+
+export async function cancelAsaasSubscription(subscriptionId: string) {
+  return asaasRequest<{ id: string; status?: string }>(`/subscriptions/${subscriptionId}`, {
+    method: "DELETE"
+  });
+}
+
+export async function reactivateAsaasSubscription(subscriptionId: string) {
+  return asaasRequest<{ id: string; status?: string }>(`/subscriptions/${subscriptionId}/restore`, {
+    method: "POST"
+  });
+}
+
+export async function getAsaasSubscription(subscriptionId: string) {
+  return asaasRequest<{ id: string; status?: string }>(`/subscriptions/${subscriptionId}`);
+}
+
+export async function listAsaasPayments(subscriptionId: string) {
+  return asaasRequest<{ data?: unknown[] }>(`/payments?subscription=${encodeURIComponent(subscriptionId)}`);
+}
+
+export async function getAsaasPayment(paymentId: string) {
+  return asaasRequest<{ id: string; status?: string; invoiceUrl?: string; bankSlipUrl?: string }>(`/payments/${paymentId}`);
+}
+
+export async function createAsaasPaymentLink(input: Record<string, unknown>) {
+  return asaasRequest<{ id: string; url?: string }>("/paymentLinks", {
+    method: "POST",
+    body: input
+  });
+}
+
+export const asaasBillingProvider: BillingProvider = {
+  createCustomer: createAsaasCustomer,
+  updateCustomer: updateAsaasCustomer,
+  createSubscription: createAsaasSubscription,
+  updateSubscription: updateAsaasSubscription,
+  cancelSubscription: cancelAsaasSubscription,
+  reactivateSubscription: reactivateAsaasSubscription,
+  getSubscription: getAsaasSubscription,
+  listPayments: listAsaasPayments,
+  getPayment: getAsaasPayment,
+  createPaymentLink: createAsaasPaymentLink
+};

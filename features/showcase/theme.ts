@@ -2,6 +2,15 @@ import type { CSSProperties } from "react";
 
 type ShowcaseThemeInput = {
   primary_color?: string | null;
+  accent_color?: string | null;
+  background_color?: string | null;
+  card_color?: string | null;
+  text_color?: string | null;
+  button_color?: string | null;
+  button_text_color?: string | null;
+  border_color?: string | null;
+  radius_style?: string | null;
+  shadow_style?: string | null;
   theme_key?: string | null;
   font_key?: string | null;
 };
@@ -50,6 +59,55 @@ export const showcaseThemeOptions = [
     description: "Premium com sensacao de valor.",
     previewFrom: "#fffbeb",
     previewTo: "#fde68a"
+  },
+  {
+    key: "modern",
+    name: "Moderno",
+    description: "Landing page clara com contraste comercial.",
+    previewFrom: "#f8fafc",
+    previewTo: "#e2e8f0"
+  },
+  {
+    key: "elegant",
+    name: "Elegante",
+    description: "Sofisticado para negocios premium.",
+    previewFrom: "#fff7ed",
+    previewTo: "#f8e1d4"
+  },
+  {
+    key: "minimal",
+    name: "Minimalista",
+    description: "Pouca cor, muito respiro e leitura simples.",
+    previewFrom: "#ffffff",
+    previewTo: "#f4f4f5"
+  },
+  {
+    key: "dark",
+    name: "Escuro",
+    description: "Fundo escuro controlado com cards claros.",
+    previewFrom: "#101014",
+    previewTo: "#27272a"
+  },
+  {
+    key: "light",
+    name: "Claro",
+    description: "Clean e universal para qualquer servico.",
+    previewFrom: "#ffffff",
+    previewTo: "#eef2ff"
+  },
+  {
+    key: "automotive",
+    name: "Automotivo",
+    description: "Forte para oficinas, lava-jatos e servicos tecnicos.",
+    previewFrom: "#f8fafc",
+    previewTo: "#fee2e2"
+  },
+  {
+    key: "professional",
+    name: "Profissional",
+    description: "Neutro para consultores e atendimentos especializados.",
+    previewFrom: "#f5f7fb",
+    previewTo: "#dbeafe"
   }
 ] as const;
 
@@ -110,6 +168,62 @@ const themePalettes: Record<ShowcaseThemeKey, {
     bg: "#fffaf0",
     soft: "#fef3c7",
     card: "#ffffff"
+  },
+  modern: {
+    primary: "#0f172a",
+    secondary: "#334155",
+    accent: "#14b8a6",
+    bg: "#f8fafc",
+    soft: "#e2e8f0",
+    card: "#ffffff"
+  },
+  elegant: {
+    primary: "#be185d",
+    secondary: "#831843",
+    accent: "#f9a8d4",
+    bg: "#fff7fb",
+    soft: "#fde7f1",
+    card: "#ffffff"
+  },
+  minimal: {
+    primary: "#18181b",
+    secondary: "#52525b",
+    accent: "#a1a1aa",
+    bg: "#fafafa",
+    soft: "#f4f4f5",
+    card: "#ffffff"
+  },
+  dark: {
+    primary: "#22c55e",
+    secondary: "#16a34a",
+    accent: "#86efac",
+    bg: "#101014",
+    soft: "#18181b",
+    card: "#ffffff"
+  },
+  light: {
+    primary: "#2563eb",
+    secondary: "#1d4ed8",
+    accent: "#93c5fd",
+    bg: "#f8fbff",
+    soft: "#e0ecff",
+    card: "#ffffff"
+  },
+  automotive: {
+    primary: "#dc2626",
+    secondary: "#991b1b",
+    accent: "#f97316",
+    bg: "#f8fafc",
+    soft: "#fee2e2",
+    card: "#ffffff"
+  },
+  professional: {
+    primary: "#0369a1",
+    secondary: "#0f172a",
+    accent: "#38bdf8",
+    bg: "#f5f9ff",
+    soft: "#dbeafe",
+    card: "#ffffff"
   }
 };
 
@@ -167,7 +281,19 @@ export function resolveShowcaseTheme(showcase: ShowcaseThemeInput | null | undef
   const themeKey = showcase?.theme_key && showcase.theme_key in themePalettes ? showcase.theme_key as ShowcaseThemeKey : "beauty";
   const palette = themePalettes[themeKey];
   const primary = resolvePrimary(showcase, palette.primary);
-  const buttonText = readableText(primary);
+  const accent = normalizeHex(showcase?.accent_color) ?? palette.accent;
+  const background = normalizeHex(showcase?.background_color) ?? palette.bg;
+  const card = normalizeHex(showcase?.card_color) ?? palette.card;
+  const text = normalizeHex(showcase?.text_color) ?? readableText(background);
+  const button = normalizeHex(showcase?.button_color) ?? primary;
+  const buttonText = normalizeHex(showcase?.button_text_color) ?? readableText(button);
+  const border = normalizeHex(showcase?.border_color) ?? (contrastRatio(card, "#e6eaf0") > 1.2 ? "#e6eaf0" : "#cbd5e1");
+  const radius = showcase?.radius_style === "pill" ? "999px" : showcase?.radius_style === "soft" ? "18px" : "28px";
+  const shadow = showcase?.shadow_style === "none"
+    ? "none"
+    : showcase?.shadow_style === "elevated"
+      ? "0 34px 90px rgba(15, 23, 42, 0.18)"
+      : "0 24px 80px rgba(15, 23, 42, 0.10)";
 
   return {
     "--theme-primary": primary,
@@ -175,43 +301,43 @@ export function resolveShowcaseTheme(showcase: ShowcaseThemeInput | null | undef
     "--theme-primary-foreground": buttonText,
     "--theme-primary-contrast": buttonText,
     "--theme-secondary": palette.secondary,
-    "--theme-accent": palette.accent,
-    "--theme-background": palette.bg,
-    "--theme-bg": palette.bg,
+    "--theme-accent": accent,
+    "--theme-background": background,
+    "--theme-bg": background,
     "--theme-bg-soft": palette.soft,
-    "--theme-surface": palette.card,
-    "--theme-card": palette.card,
-    "--theme-text": "#121826",
+    "--theme-surface": card,
+    "--theme-card": card,
+    "--theme-text": text,
     "--theme-text-muted": "#667085",
     "--theme-muted": "#667085",
-    "--theme-border": "#e6eaf0",
+    "--theme-border": border,
     "--theme-focus": primary,
     "--theme-success": "#16a34a",
     "--theme-warning": "#d97706",
     "--theme-error": "#dc2626",
-    "--theme-radius": "28px",
-    "--theme-shadow": "0 24px 80px rgba(15, 23, 42, 0.10)",
-    "--store-primary": primary,
+    "--theme-radius": radius,
+    "--theme-shadow": shadow,
+    "--store-primary": button,
     "--store-primary-hover": palette.secondary,
     "--store-primary-foreground": buttonText,
     "--store-primary-contrast": buttonText,
     "--store-secondary": palette.secondary,
-    "--store-accent": palette.accent,
-    "--store-background": palette.bg,
-    "--store-bg": palette.bg,
+    "--store-accent": accent,
+    "--store-background": background,
+    "--store-bg": background,
     "--store-bg-soft": palette.soft,
-    "--store-surface": palette.card,
-    "--store-card": palette.card,
-    "--store-text": "#121826",
+    "--store-surface": card,
+    "--store-card": card,
+    "--store-text": text,
     "--store-text-muted": "#667085",
     "--store-muted": "#667085",
-    "--store-border": "#e6eaf0",
+    "--store-border": border,
     "--store-focus": primary,
     "--store-success": "#16a34a",
     "--store-warning": "#d97706",
     "--store-error": "#dc2626",
-    "--store-radius": "28px",
-    "--store-shadow": "0 24px 80px rgba(15, 23, 42, 0.10)"
+    "--store-radius": radius,
+    "--store-shadow": shadow
   } as CSSProperties;
 }
 

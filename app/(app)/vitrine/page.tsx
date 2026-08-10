@@ -11,7 +11,7 @@ export default async function VitrinePage() {
     getServicesData(organization.id),
     getAgendaData(organization.id)
   ]);
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://prospectoads.com";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://prospectorads.com";
   const publicUrl = `${appUrl.replace(/\/$/, "")}/p/${organization.slug}`;
 
   return (

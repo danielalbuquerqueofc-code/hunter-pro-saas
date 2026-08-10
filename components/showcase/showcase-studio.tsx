@@ -2,6 +2,8 @@
 
 import { type CSSProperties, type ReactNode, useActionState, useMemo, useState } from "react";
 import {
+  ArrowDown,
+  ArrowUp,
   Bot,
   ChevronsUpDown,
   Copy,
@@ -36,8 +38,12 @@ type ShowcaseFormData = {
   title: string | null;
   subtitle: string | null;
   description: string | null;
+  commercial_name?: string | null;
+  slogan?: string | null;
   hero_image_url: string | null;
   logo_url: string | null;
+  profile_image_url?: string | null;
+  favicon_url?: string | null;
   whatsapp: string | null;
   phone: string | null;
   instagram_url: string | null;
@@ -45,7 +51,23 @@ type ShowcaseFormData = {
   tiktok_url: string | null;
   youtube_url: string | null;
   address_text: string | null;
+  service_area?: string | null;
+  opening_hours_text?: string | null;
+  payment_methods_text?: string | null;
   primary_color?: string | null;
+  accent_color?: string | null;
+  background_color?: string | null;
+  card_color?: string | null;
+  text_color?: string | null;
+  button_color?: string | null;
+  button_text_color?: string | null;
+  border_color?: string | null;
+  cta_primary_text?: string | null;
+  cta_secondary_text?: string | null;
+  radius_style?: string | null;
+  shadow_style?: string | null;
+  section_visibility?: Record<string, boolean> | null;
+  section_order?: string[] | null;
   theme_key: string | null;
   font_key: string | null;
   status: string | null;
@@ -80,6 +102,25 @@ type ShowcaseStudioProps = {
 };
 
 const initialState: ShowcaseActionState = { ok: false };
+const showcaseSections = [
+  { key: "hero", label: "Capa" },
+  { key: "trust", label: "Destaques" },
+  { key: "about", label: "Sobre" },
+  { key: "services", label: "Servicos" },
+  { key: "professionals", label: "Profissionais" },
+  { key: "gallery", label: "Galeria" },
+  { key: "reviews", label: "Avaliacoes" },
+  { key: "promotions", label: "Promocoes" },
+  { key: "contact", label: "Endereco e contato" },
+  { key: "hours", label: "Horarios" },
+  { key: "payments", label: "Formas de pagamento" },
+  { key: "links", label: "Links" },
+  { key: "cta", label: "Chamada final" },
+  { key: "footer", label: "Rodape" }
+] as const;
+
+const defaultSectionVisibility = Object.fromEntries(showcaseSections.map((section) => [section.key, true])) as Record<string, boolean>;
+const defaultSectionOrder = showcaseSections.map((section) => section.key);
 
 function formatCurrency(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -99,10 +140,14 @@ export function ShowcaseStudio({
   const [themeKey, setThemeKey] = useState(showcase?.theme_key ?? "clean_light");
   const [fontKey, setFontKey] = useState(showcase?.font_key ?? "sans");
   const [title, setTitle] = useState(showcase?.title ?? organizationName);
+  const [commercialName, setCommercialName] = useState(showcase?.commercial_name ?? "");
+  const [slogan, setSlogan] = useState(showcase?.slogan ?? "");
   const [subtitle, setSubtitle] = useState(showcase?.subtitle ?? "Atendimento simples, profissional e com agenda online.");
   const [description, setDescription] = useState(showcase?.description ?? "Escolha um servico, veja horarios e fale com a equipe em poucos toques.");
   const [heroImageUrl, setHeroImageUrl] = useState(showcase?.hero_image_url ?? "");
   const [logoUrl, setLogoUrl] = useState(showcase?.logo_url ?? "");
+  const [profileImageUrl, setProfileImageUrl] = useState(showcase?.profile_image_url ?? "");
+  const [faviconUrl, setFaviconUrl] = useState(showcase?.favicon_url ?? "");
   const [whatsapp, setWhatsapp] = useState(showcase?.whatsapp ?? "");
   const [phone, setPhone] = useState(showcase?.phone ?? "");
   const [instagramUrl, setInstagramUrl] = useState(showcase?.instagram_url ?? "");
@@ -110,8 +155,44 @@ export function ShowcaseStudio({
   const [tiktokUrl, setTiktokUrl] = useState(showcase?.tiktok_url ?? "");
   const [youtubeUrl, setYoutubeUrl] = useState(showcase?.youtube_url ?? "");
   const [addressText, setAddressText] = useState(showcase?.address_text ?? "");
+  const [serviceArea, setServiceArea] = useState(showcase?.service_area ?? "");
+  const [openingHoursText, setOpeningHoursText] = useState(showcase?.opening_hours_text ?? "");
+  const [paymentMethodsText, setPaymentMethodsText] = useState(showcase?.payment_methods_text ?? "");
+  const [primaryColor, setPrimaryColor] = useState(showcase?.primary_color ?? "");
+  const [accentColor, setAccentColor] = useState(showcase?.accent_color ?? "");
+  const [backgroundColor, setBackgroundColor] = useState(showcase?.background_color ?? "");
+  const [cardColor, setCardColor] = useState(showcase?.card_color ?? "");
+  const [textColor, setTextColor] = useState(showcase?.text_color ?? "");
+  const [buttonColor, setButtonColor] = useState(showcase?.button_color ?? "");
+  const [buttonTextColor, setButtonTextColor] = useState(showcase?.button_text_color ?? "");
+  const [borderColor, setBorderColor] = useState(showcase?.border_color ?? "");
+  const [ctaPrimaryText, setCtaPrimaryText] = useState(showcase?.cta_primary_text ?? "Agendar agora");
+  const [ctaSecondaryText, setCtaSecondaryText] = useState(showcase?.cta_secondary_text ?? "Falar no WhatsApp");
+  const [radiusStyle, setRadiusStyle] = useState(showcase?.radius_style ?? "large");
+  const [shadowStyle, setShadowStyle] = useState(showcase?.shadow_style ?? "soft");
+  const [sectionVisibility, setSectionVisibility] = useState<Record<string, boolean>>({
+    ...defaultSectionVisibility,
+    ...(showcase?.section_visibility ?? {})
+  });
+  const [sectionOrder, setSectionOrder] = useState(() => {
+    const savedOrder = showcase?.section_order?.filter((key) => showcaseSections.some((section) => section.key === key)) ?? [];
+    return [...savedOrder, ...defaultSectionOrder.filter((key) => !savedOrder.includes(key))];
+  });
   const selectedTheme = showcaseThemeOptions.find((theme) => theme.key === themeKey) ?? showcaseThemeOptions[0];
-  const previewStyle = resolveShowcaseTheme({ theme_key: themeKey, font_key: fontKey }) as CSSProperties;
+  const previewStyle = resolveShowcaseTheme({
+    theme_key: themeKey,
+    font_key: fontKey,
+    primary_color: primaryColor,
+    accent_color: accentColor,
+    background_color: backgroundColor,
+    card_color: cardColor,
+    text_color: textColor,
+    button_color: buttonColor,
+    button_text_color: buttonTextColor,
+    border_color: borderColor,
+    radius_style: radiusStyle,
+    shadow_style: shadowStyle
+  }) as CSSProperties;
   const qrCodeUrl = useMemo(
     () => `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(publicUrl)}`,
     [publicUrl]
@@ -128,10 +209,14 @@ export function ShowcaseStudio({
     setThemeKey(showcase?.theme_key ?? "clean_light");
     setFontKey(showcase?.font_key ?? "sans");
     setTitle(showcase?.title ?? organizationName);
+    setCommercialName(showcase?.commercial_name ?? "");
+    setSlogan(showcase?.slogan ?? "");
     setSubtitle(showcase?.subtitle ?? "Atendimento simples, profissional e com agenda online.");
     setDescription(showcase?.description ?? "Escolha um servico, veja horarios e fale com a equipe em poucos toques.");
     setHeroImageUrl(showcase?.hero_image_url ?? "");
     setLogoUrl(showcase?.logo_url ?? "");
+    setProfileImageUrl(showcase?.profile_image_url ?? "");
+    setFaviconUrl(showcase?.favicon_url ?? "");
     setWhatsapp(showcase?.whatsapp ?? "");
     setPhone(showcase?.phone ?? "");
     setInstagramUrl(showcase?.instagram_url ?? "");
@@ -139,6 +224,27 @@ export function ShowcaseStudio({
     setTiktokUrl(showcase?.tiktok_url ?? "");
     setYoutubeUrl(showcase?.youtube_url ?? "");
     setAddressText(showcase?.address_text ?? "");
+    setServiceArea(showcase?.service_area ?? "");
+    setOpeningHoursText(showcase?.opening_hours_text ?? "");
+    setPaymentMethodsText(showcase?.payment_methods_text ?? "");
+    setPrimaryColor(showcase?.primary_color ?? "");
+    setAccentColor(showcase?.accent_color ?? "");
+    setBackgroundColor(showcase?.background_color ?? "");
+    setCardColor(showcase?.card_color ?? "");
+    setTextColor(showcase?.text_color ?? "");
+    setButtonColor(showcase?.button_color ?? "");
+    setButtonTextColor(showcase?.button_text_color ?? "");
+    setBorderColor(showcase?.border_color ?? "");
+    setCtaPrimaryText(showcase?.cta_primary_text ?? "Agendar agora");
+    setCtaSecondaryText(showcase?.cta_secondary_text ?? "Falar no WhatsApp");
+    setRadiusStyle(showcase?.radius_style ?? "large");
+    setShadowStyle(showcase?.shadow_style ?? "soft");
+    setSectionVisibility({
+      ...defaultSectionVisibility,
+      ...(showcase?.section_visibility ?? {})
+    });
+    const savedOrder = showcase?.section_order?.filter((key) => showcaseSections.some((section) => section.key === key)) ?? [];
+    setSectionOrder([...savedOrder, ...defaultSectionOrder.filter((key) => !savedOrder.includes(key))]);
   };
   const restoreDefaultTheme = () => {
     const confirmed = window.confirm("Restaurar o tema padrao da vitrine? As demais informacoes continuam no formulario ate voce salvar.");
@@ -146,10 +252,10 @@ export function ShowcaseStudio({
     setThemeKey("beauty");
     setFontKey("sans");
   };
-  const uploadAsset = async (file: File, kind: "logo" | "cover") => {
+  const uploadAsset = async (file: File, kind: "logo" | "cover" | "profile" | "favicon") => {
     const supabase = createClient();
     const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const safeKind = kind === "logo" ? "logo" : "cover";
+    const safeKind = kind;
     const path = `${organizationId}/showcase/${safeKind}-${Date.now()}.${extension}`;
     const { error } = await supabase.storage.from("showcase-assets").upload(path, file, {
       cacheControl: "3600",
@@ -164,6 +270,18 @@ export function ShowcaseStudio({
     const { data } = supabase.storage.from("showcase-assets").getPublicUrl(path);
     if (kind === "logo") setLogoUrl(data.publicUrl);
     if (kind === "cover") setHeroImageUrl(data.publicUrl);
+    if (kind === "profile") setProfileImageUrl(data.publicUrl);
+    if (kind === "favicon") setFaviconUrl(data.publicUrl);
+  };
+  const moveSection = (key: string, direction: -1 | 1) => {
+    setSectionOrder((current) => {
+      const index = current.indexOf(key);
+      const nextIndex = index + direction;
+      if (index < 0 || nextIndex < 0 || nextIndex >= current.length) return current;
+      const next = [...current];
+      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+      return next;
+    });
   };
 
   return (
@@ -178,7 +296,7 @@ export function ShowcaseStudio({
             <Save className="h-7 w-7 text-zinc-500" />
           </div>
 
-          <form action={action} className="mt-6 grid gap-5">
+          <form id="showcase-main-form" action={action} className="mt-6 grid gap-5">
             <FormMessage type="success">{state.message}</FormMessage>
             <FormMessage>{state.error}</FormMessage>
 
@@ -193,6 +311,17 @@ export function ShowcaseStudio({
                   <option value="DRAFT">Rascunho</option>
                   <option value="PUBLISHED">Publicado</option>
                 </Select>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="commercialName" className="text-slate-600">Nome comercial</Label>
+                <Input id="commercialName" name="commercialName" value={commercialName} onChange={(event) => setCommercialName(event.target.value)} placeholder={organizationName} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="slogan" className="text-slate-600">Slogan curto</Label>
+                <Input id="slogan" name="slogan" value={slogan} onChange={(event) => setSlogan(event.target.value)} placeholder="Ex.: Beleza e cuidado do seu jeito" className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
               </div>
             </div>
 
@@ -214,7 +343,17 @@ export function ShowcaseStudio({
                 </Select>
               </div>
             </div>
-            <input type="hidden" name="primaryColor" value="" />
+
+            <div className="grid gap-4 md:grid-cols-4">
+              <ColorField label="Cor principal" name="primaryColor" value={primaryColor} onChange={setPrimaryColor} />
+              <ColorField label="Destaque" name="accentColor" value={accentColor} onChange={setAccentColor} />
+              <ColorField label="Fundo" name="backgroundColor" value={backgroundColor} onChange={setBackgroundColor} />
+              <ColorField label="Cards" name="cardColor" value={cardColor} onChange={setCardColor} />
+              <ColorField label="Textos" name="textColor" value={textColor} onChange={setTextColor} />
+              <ColorField label="Botao" name="buttonColor" value={buttonColor} onChange={setButtonColor} />
+              <ColorField label="Texto do botao" name="buttonTextColor" value={buttonTextColor} onChange={setButtonTextColor} />
+              <ColorField label="Bordas" name="borderColor" value={borderColor} onChange={setBorderColor} />
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="subtitle" className="text-slate-600">Chamada principal</Label>
@@ -241,8 +380,24 @@ export function ShowcaseStudio({
                 onUpload={(file) => uploadAsset(file, "cover")}
                 onUrlChange={setHeroImageUrl}
               />
+              <AssetUploadField
+                id="profileUpload"
+                label="Foto de perfil"
+                value={profileImageUrl}
+                onUpload={(file) => uploadAsset(file, "profile")}
+                onUrlChange={setProfileImageUrl}
+              />
+              <AssetUploadField
+                id="faviconUpload"
+                label="Icone do navegador"
+                value={faviconUrl}
+                onUpload={(file) => uploadAsset(file, "favicon")}
+                onUrlChange={setFaviconUrl}
+              />
               <input type="hidden" name="logoUrl" value={logoUrl} />
               <input type="hidden" name="heroImageUrl" value={heroImageUrl} />
+              <input type="hidden" name="profileImageUrl" value={profileImageUrl} />
+              <input type="hidden" name="faviconUrl" value={faviconUrl} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
@@ -280,17 +435,101 @@ export function ShowcaseStudio({
               <Input id="addressText" name="addressText" value={addressText} onChange={(event) => setAddressText(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
             </div>
 
-            <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
-              <SubmitButton className="h-14 rounded-full bg-[var(--hp-accent)] text-base font-black text-[#04100a] hover:bg-emerald-400">
-                Salvar alteracoes
-              </SubmitButton>
-              <a href={publicUrl} target="_blank" rel="noreferrer" className="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-black text-slate-900">
-                <Eye className="h-4 w-4" />
-                Visualizar vitrine
-              </a>
-              <button type="button" onClick={resetToSaved} className="h-14 rounded-full border border-slate-200 bg-white px-5 text-sm font-black text-slate-700">
-                Cancelar alteracoes
-              </button>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="serviceArea" className="text-slate-600">Area de atendimento</Label>
+                <Input id="serviceArea" name="serviceArea" value={serviceArea} onChange={(event) => setServiceArea(event.target.value)} placeholder="Ex.: Fortaleza e regiao" className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="openingHoursText" className="text-slate-600">Horario de funcionamento</Label>
+                <Input id="openingHoursText" name="openingHoursText" value={openingHoursText} onChange={(event) => setOpeningHoursText(event.target.value)} placeholder="Ex.: Seg a Sex, 8h as 18h" className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="paymentMethodsText" className="text-slate-600">Formas de pagamento</Label>
+                <Input id="paymentMethodsText" name="paymentMethodsText" value={paymentMethodsText} onChange={(event) => setPaymentMethodsText(event.target.value)} placeholder="Ex.: Pix, cartao e dinheiro" className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="ctaPrimaryText" className="text-slate-600">Texto do botao principal</Label>
+                <Input id="ctaPrimaryText" name="ctaPrimaryText" value={ctaPrimaryText} onChange={(event) => setCtaPrimaryText(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ctaSecondaryText" className="text-slate-600">Texto do botao secundario</Label>
+                <Input id="ctaSecondaryText" name="ctaSecondaryText" value={ctaSecondaryText} onChange={(event) => setCtaSecondaryText(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950" />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="radiusStyle" className="text-slate-600">Arredondamento</Label>
+                <Select id="radiusStyle" name="radiusStyle" value={radiusStyle} onChange={(event) => setRadiusStyle(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950">
+                  <option value="soft">Suave</option>
+                  <option value="large">Grande</option>
+                  <option value="pill">Bem arredondado</option>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="shadowStyle" className="text-slate-600">Sombra dos cards</Label>
+                <Select id="shadowStyle" name="shadowStyle" value={shadowStyle} onChange={(event) => setShadowStyle(event.target.value)} className="h-14 rounded-2xl border-slate-200 bg-white text-slate-950">
+                  <option value="none">Sem sombra</option>
+                  <option value="soft">Suave</option>
+                  <option value="elevated">Elevada</option>
+                </Select>
+              </div>
+            </div>
+
+            <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center gap-3">
+                <GripVertical className="h-5 w-5 text-zinc-500" />
+                <div>
+                  <p className="font-black text-slate-950">Secoes da vitrine publica</p>
+                  <p className="text-sm text-zinc-500">Escolha o que aparece e ajuste a ordem. Secoes sem dados reais ficam ocultas automaticamente.</p>
+                </div>
+              </div>
+              <input type="hidden" name="sectionVisibility" value={JSON.stringify(sectionVisibility)} />
+              <input type="hidden" name="sectionOrder" value={JSON.stringify(sectionOrder)} />
+              <div className="mt-4 grid gap-2">
+                {sectionOrder.map((key, index) => {
+                  const section = showcaseSections.find((item) => item.key === key);
+                  if (!section) return null;
+
+                  return (
+                    <div key={key} className="grid gap-3 rounded-2xl bg-white p-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                      <label className="flex min-h-11 items-center gap-3 text-sm font-black text-slate-900">
+                        <input
+                          type="checkbox"
+                          checked={sectionVisibility[key] ?? true}
+                          onChange={(event) => setSectionVisibility((current) => ({ ...current, [key]: event.target.checked }))}
+                          className="h-5 w-5 rounded border-slate-300"
+                        />
+                        {section.label}
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => moveSection(key, -1)}
+                          disabled={index === 0}
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-700 disabled:opacity-35"
+                          aria-label={`Mover ${section.label} para cima`}
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveSection(key, 1)}
+                          disabled={index === sectionOrder.length - 1}
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-700 disabled:opacity-35"
+                          aria-label={`Mover ${section.label} para baixo`}
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </form>
         </section>
@@ -329,6 +568,31 @@ export function ShowcaseStudio({
             <a href={publicUrl} target="_blank" rel="noreferrer" className="rounded-full bg-slate-950 px-4 py-2 text-sm font-black text-white">
               Visualizar vitrine
             </a>
+          </div>
+        </section>
+
+        <section className="hp-card rounded-[2rem] p-5 sm:p-6">
+          <p className="text-sm font-black uppercase tracking-wide text-[var(--hp-accent)]">Finalizar edicao</p>
+          <h2 className="mt-1 text-2xl font-black">Revise e salve todas as alteracoes</h2>
+          <p className="mt-2 text-sm text-zinc-500">As informacoes acima serao salvas juntas e a vitrine publica sera atualizada.</p>
+          <div className="mt-5 grid gap-3 md:grid-cols-[1fr_auto_auto]">
+            <SubmitButton form="showcase-main-form" pendingText="Salvando alteracoes..." className="h-14 rounded-full bg-[var(--hp-accent)] text-base font-black text-[#04100a] hover:bg-emerald-400">
+              Salvar alteracoes
+            </SubmitButton>
+            <a href={publicUrl} target="_blank" rel="noreferrer" className="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-black text-slate-900">
+              <Eye className="h-4 w-4" />
+              Visualizar vitrine
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                const confirmed = window.confirm("Descartar as alteracoes nao salvas?");
+                if (confirmed) resetToSaved();
+              }}
+              className="h-14 rounded-full border border-slate-200 bg-white px-5 text-sm font-black text-slate-700"
+            >
+              Cancelar alteracoes
+            </button>
           </div>
         </section>
 
@@ -499,6 +763,43 @@ function SocialPreviewLink({ href, icon, label }: { href?: string | null; icon: 
       {icon}
       {label}
     </a>
+  );
+}
+
+function ColorField({
+  label,
+  name,
+  value,
+  onChange
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const fallback = value || "#ffffff";
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={name} className="text-slate-600">{label}</Label>
+      <div className="flex h-14 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <input
+          aria-label={label}
+          type="color"
+          value={fallback}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-full w-14 shrink-0 cursor-pointer border-0 bg-transparent p-2"
+        />
+        <Input
+          id={name}
+          name={name}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder="#ffffff"
+          className="h-full rounded-none border-0 bg-white text-slate-950 focus:ring-0"
+        />
+      </div>
+    </div>
   );
 }
 

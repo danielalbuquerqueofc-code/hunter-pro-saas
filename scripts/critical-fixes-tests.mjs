@@ -71,18 +71,18 @@ assertIncludes(layout, "<PwaRegister />", "layout must register the PWA helper")
 
 const theme = read("features/showcase/theme.ts");
 assertIncludes(theme, "--store-primary-foreground", "showcase theme must expose safe button text token");
-assertIncludes(theme, "readableText(primary)", "showcase theme must calculate readable button text");
+assertIncludes(theme, "readableText(button)", "showcase theme must calculate readable button text");
 
 const studio = read("components/showcase/showcase-studio.tsx");
-assertIncludes(studio, 'name="primaryColor" value=""', "showcase studio must clear legacy manual primary color on save");
-assertIncludes(studio, "resolveShowcaseTheme({ theme_key: themeKey, font_key: fontKey })", "showcase preview must apply selected theme");
+assertIncludes(studio, 'name="primaryColor"', "showcase studio must save the selected primary color");
+assertIncludes(studio, "button_text_color: buttonTextColor", "showcase preview must apply full selected theme");
 
 const publicShowcase = read("app/(public)/p/[slug]/page.tsx");
-assertIncludes(publicShowcase, "https://prospectoads.com", "public showcase canonical fallback must use the final domain");
-assertNotIncludes(publicShowcase, "prospectorads.com", "public showcase must not use the old misspelled domain");
+assertIncludes(publicShowcase, "https://prospectorads.com", "public showcase canonical fallback must use the final domain");
+assertNotIncludes(publicShowcase, "https://prospectoads.com", "public showcase must not use the old misspelled domain");
 
 const publishGuide = read("PUBLICAR_AGORA.md");
 assertNotIncludes(publishGuide, "danielalbuquerque.com.br", "publish guide must not point to the old personal domain");
-assertIncludes(publishGuide, "prospectoads.com", "publish guide must point to the final domain");
+assertIncludes(publishGuide, "prospectorads.com", "publish guide must point to the final domain");
 
 console.log("critical-fixes: ok");

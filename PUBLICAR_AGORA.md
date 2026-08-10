@@ -10,11 +10,11 @@ No Supabase, em `Authentication > URL Configuration`, deixe:
 
 ```txt
 Site URL:
-https://prospectoads.com
+https://prospectorads.com
 
 Redirect URLs:
-https://prospectoads.com/**
-https://www.prospectoads.com/**
+https://prospectorads.com/**
+https://www.prospectorads.com/**
 http://localhost:3000/**
 http://localhost:3001/**
 ```
@@ -27,7 +27,7 @@ Na Vercel, em `Project Settings > Environment Variables`, cadastre:
 NEXT_PUBLIC_SUPABASE_URL=https://stjmgporrsnhaudzmwvf.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_publicavel
 SUPABASE_SERVICE_ROLE_KEY=sua_chave_secreta
-NEXT_PUBLIC_APP_URL=https://prospectoads.com
+NEXT_PUBLIC_APP_URL=https://prospectorads.com
 ```
 
 Nunca coloque `SUPABASE_SERVICE_ROLE_KEY` em prints, GitHub publico, HTML ou codigo de navegador.
@@ -63,8 +63,8 @@ Depois que a Vercel gerar um link funcionando:
 3. Adicione:
 
 ```txt
-prospectoads.com
-www.prospectoads.com
+prospectorads.com
+www.prospectorads.com
 ```
 
 4. A Vercel vai mostrar os registros DNS.
@@ -84,7 +84,7 @@ Mas use o que aparecer na sua tela da Vercel.
 
 Depois de publicar, teste nesta ordem:
 
-1. `https://prospectoads.com/login`
+1. `https://prospectorads.com/login`
 2. Cadastro de usuario.
 3. Login.
 4. Criar empresa.

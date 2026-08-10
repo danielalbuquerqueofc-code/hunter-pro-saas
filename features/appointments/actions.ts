@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { getCurrentOrganization } from "@/features/organizations/current";
+import { syncGoogleCalendarAppointmentByPublicToken } from "@/features/integrations/google-calendar";
 import {
   appointmentSchema,
   availabilityRuleSchema,
@@ -330,6 +331,8 @@ export async function requestAppointmentAction(formData: FormData) {
     if (!result?.ok || !result.public_token) {
       throw new Error(result?.error ?? "Esse horario nao esta mais disponivel.");
     }
+
+    await syncGoogleCalendarAppointmentByPublicToken(result.public_token);
 
     redirect(`/agendamento-recebido?token=${result.public_token}`);
   }

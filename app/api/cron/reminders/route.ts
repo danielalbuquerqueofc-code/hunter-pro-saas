@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendWhatsappText } from "@/features/integrations/whatsapp-provider";
 
 type ReminderJob = {
   id: string;
@@ -113,34 +114,11 @@ function getSkipReason(job: ReminderJob) {
 }
 
 async function sendWhatsapp(job: ReminderJob) {
-  if (!env.whatsappProviderUrl || !env.whatsappProviderToken) {
-    return {
-      ok: false,
-      skipped: true,
-      error: "WHATSAPP_PROVIDER_URL/WHATSAPP_PROVIDER_TOKEN nao configurados."
-    };
-  }
-
-  const response = await fetch(env.whatsappProviderUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${env.whatsappProviderToken}`,
-      "Idempotency-Key": job.idempotency_key
-    },
-    body: JSON.stringify({
-      to: job.appointment?.customer_phone,
-      body: renderWhatsappMessage(job),
-      idempotency_key: job.idempotency_key
-    })
+  return sendWhatsappText({
+    to: job.appointment?.customer_phone,
+    body: renderWhatsappMessage(job),
+    idempotencyKey: job.idempotency_key
   });
-
-  const payload = await response.json().catch(() => ({}));
-  return {
-    ok: response.ok,
-    providerMessageId: typeof payload.id === "string" ? payload.id : undefined,
-    error: response.ok ? undefined : payload.error || `HTTP ${response.status}`
-  };
 }
 
 export async function GET(request: Request) {

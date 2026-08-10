@@ -51,9 +51,20 @@ type Showcase = {
   title: string;
   subtitle: string | null;
   description: string | null;
+  commercial_name?: string | null;
+  slogan?: string | null;
   hero_image_url: string | null;
   logo_url: string | null;
+  profile_image_url?: string | null;
+  favicon_url?: string | null;
   primary_color?: string | null;
+  accent_color?: string | null;
+  background_color?: string | null;
+  card_color?: string | null;
+  text_color?: string | null;
+  button_color?: string | null;
+  button_text_color?: string | null;
+  border_color?: string | null;
   whatsapp: string | null;
   instagram_url?: string | null;
   facebook_url?: string | null;
@@ -61,6 +72,15 @@ type Showcase = {
   youtube_url?: string | null;
   phone?: string | null;
   address_text?: string | null;
+  service_area?: string | null;
+  opening_hours_text?: string | null;
+  payment_methods_text?: string | null;
+  cta_primary_text?: string | null;
+  cta_secondary_text?: string | null;
+  radius_style?: string | null;
+  shadow_style?: string | null;
+  section_visibility?: Record<string, boolean> | null;
+  section_order?: string[] | null;
   theme_key?: string | null;
   font_key?: string | null;
 };
@@ -108,6 +128,39 @@ type PublicStorefrontProps = {
   gallery: GalleryItem[];
 };
 
+const defaultSectionVisibility: Record<string, boolean> = {
+  hero: true,
+  trust: true,
+  about: true,
+  services: true,
+  professionals: true,
+  gallery: true,
+  reviews: true,
+  promotions: true,
+  contact: true,
+  hours: true,
+  payments: true,
+  links: true,
+  cta: true,
+  footer: true
+};
+const defaultSectionOrder = [
+  "hero",
+  "trust",
+  "about",
+  "services",
+  "professionals",
+  "gallery",
+  "reviews",
+  "promotions",
+  "contact",
+  "hours",
+  "payments",
+  "links",
+  "cta",
+  "footer"
+];
+
 type ApiSlot = {
   time: string;
   startsAt: string;
@@ -129,7 +182,10 @@ type StorefrontContext = {
   heroPhoto: string | null | undefined;
   address: string;
   headline: string;
+  displayName: string;
   description: string;
+  ctaPrimaryText: string;
+  ctaSecondaryText: string;
   whatsapp: string;
   phone: string | null | undefined;
   instagram: string;
@@ -697,15 +753,15 @@ function BookingDialog({
 }
 
 function PublicStorefrontHeader({ context, menuOpen, setMenuOpen }: { context: StorefrontContext; menuOpen: boolean; setMenuOpen: (value: boolean) => void }) {
-  const { showcase, logoUrl, whatsapp, navItems, openBooking, shareShowcase } = context;
+  const { displayName, logoUrl, whatsapp, navItems, ctaPrimaryText, openBooking, shareShowcase } = context;
 
   return (
     <header className="fixed left-0 right-0 top-0 z-40 border-b border-white/10 bg-slate-950/30 text-white backdrop-blur-xl lg:absolute">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-4 lg:px-8">
         <a href="#inicio" className="flex min-w-0 items-center gap-3">
-          <LogoMark logoUrl={logoUrl} title={showcase.title} compact />
+          <LogoMark logoUrl={logoUrl} title={displayName} compact />
           <span className="hidden min-w-0 sm:block">
-            <strong className="block truncate text-sm font-black">{showcase.title}</strong>
+            <strong className="block truncate text-sm font-black">{displayName}</strong>
           </span>
         </a>
         <nav className="hidden items-center gap-1 text-xs font-bold lg:flex">
@@ -725,7 +781,7 @@ function PublicStorefrontHeader({ context, menuOpen, setMenuOpen }: { context: S
             <Share2 className="h-5 w-5" />
           </button>
           <button type="button" onClick={() => openBooking()} className="hidden h-11 rounded-full bg-[var(--store-primary)] px-5 text-sm font-black text-[var(--store-primary-contrast)] shadow-lg lg:inline-flex lg:items-center">
-            Agendar agora
+            {ctaPrimaryText}
           </button>
           <button type="button" onClick={() => setMenuOpen(!menuOpen)} className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-950 lg:hidden" aria-label="Abrir menu">
             {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -741,7 +797,7 @@ function PublicStorefrontHeader({ context, menuOpen, setMenuOpen }: { context: S
               </a>
             ))}
             <button type="button" onClick={() => openBooking()} className="mt-2 min-h-12 rounded-2xl bg-[var(--store-primary)] px-4 font-black text-[var(--store-primary-contrast)]">
-              Agendar agora
+              {ctaPrimaryText}
             </button>
           </div>
         </div>
@@ -751,7 +807,7 @@ function PublicStorefrontHeader({ context, menuOpen, setMenuOpen }: { context: S
 }
 
 function PublicStorefrontHero({ context }: { context: StorefrontContext }) {
-  const { showcase, logoUrl, heroPhoto, headline, description, address, whatsapp, openBooking } = context;
+  const { displayName, logoUrl, heroPhoto, headline, description, address, whatsapp, ctaPrimaryText, ctaSecondaryText, openBooking } = context;
   const title = splitHeadline(headline);
 
   return (
@@ -771,9 +827,9 @@ function PublicStorefrontHero({ context }: { context: StorefrontContext }) {
       <div className="relative mx-auto grid min-h-[720px] max-w-7xl items-end px-5 pb-28 pt-28 lg:min-h-[680px] lg:px-8 lg:pb-32 lg:pt-32">
         <div className="max-w-2xl">
           <div className="mb-5 flex items-center gap-3">
-            <LogoMark logoUrl={logoUrl} title={showcase.title} />
+            <LogoMark logoUrl={logoUrl} title={displayName} />
             <div>
-              <p className="text-lg font-black">{showcase.title}</p>
+              <p className="text-lg font-black">{displayName}</p>
               <p className="text-sm font-bold text-white/70">Vitrine digital</p>
             </div>
           </div>
@@ -796,12 +852,12 @@ function PublicStorefrontHero({ context }: { context: StorefrontContext }) {
           <div className="mt-8 grid gap-3 sm:max-w-lg sm:grid-cols-2">
             <button type="button" onClick={() => openBooking()} className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-[var(--store-primary)] px-6 text-base font-black text-[var(--store-primary-contrast)] shadow-xl">
               <CalendarDays className="h-5 w-5" />
-              Agendar agora
+              {ctaPrimaryText}
             </button>
             {whatsapp ? (
               <a href={whatsapp} target="_blank" rel="noreferrer" className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-white px-6 text-base font-black text-slate-950 shadow-xl">
                 <MessageCircle className="h-5 w-5" />
-                Falar no WhatsApp
+                {ctaSecondaryText}
               </a>
             ) : null}
           </div>
@@ -831,6 +887,115 @@ function TrustHighlights({ items }: { items: StorefrontContext["trustHighlights"
       </div>
     </section>
   );
+}
+
+function AboutSection({ context }: { context: StorefrontContext }) {
+  const { displayName, description, logoUrl, headline } = context;
+  if (!description && !headline) return null;
+
+  return (
+    <section id="sobre" className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
+      <div className="grid gap-6 rounded-[1.6rem] border border-[var(--store-border)] bg-white p-5 shadow-[var(--store-shadow)] md:grid-cols-[auto_1fr] md:items-center md:p-8">
+        <LogoMark logoUrl={logoUrl} title={displayName} />
+        <div>
+          <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--store-primary)]">Sobre</p>
+          <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-4xl">{displayName}</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--store-muted)] sm:text-base sm:leading-7">{description || headline}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProfessionalsSection({ professionals }: { professionals: Professional[] }) {
+  if (!professionals.length) return null;
+
+  return (
+    <section id="profissionais" className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
+      <div className="mb-6">
+        <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--store-primary)]">Profissionais</p>
+        <h2 className="mt-2 text-3xl font-black tracking-tight">Quem atende voce</h2>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {professionals.map((professional) => (
+          <article key={professional.id} className="rounded-[1.4rem] border border-[var(--store-border)] bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--store-bg-soft)] text-sm font-black text-[var(--store-primary)]">
+                {initials(professional.name)}
+              </span>
+              <div>
+                <h3 className="font-black">{professional.name}</h3>
+                {professional.bio ? <p className="mt-1 line-clamp-2 text-sm leading-5 text-[var(--store-muted)]">{professional.bio}</p> : null}
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function DetailsSection({ kind, context }: { kind: "contact" | "hours" | "payments" | "links"; context: StorefrontContext }) {
+  const { address, phone, whatsapp, instagram, organization, showcase, safeLinks } = context;
+  const contactItems = [
+    address ? `Endereco: ${address}` : null,
+    phone ? `Telefone: ${phone}` : null,
+    organization.email ? `E-mail: ${organization.email}` : null,
+    whatsapp ? "WhatsApp disponivel" : null,
+    instagram ? "Instagram disponivel" : null
+  ].filter(Boolean) as string[];
+
+  const data = {
+    contact: {
+      id: "contato",
+      label: "Contato",
+      title: "Canais de atendimento",
+      items: contactItems
+    },
+    hours: {
+      id: "horarios",
+      label: "Horarios",
+      title: "Quando atender",
+      items: [showcase.opening_hours_text, showcase.service_area ? `Area: ${showcase.service_area}` : null].filter(Boolean) as string[]
+    },
+    payments: {
+      id: "pagamentos",
+      label: "Pagamento",
+      title: "Formas de pagamento",
+      items: [showcase.payment_methods_text].filter(Boolean) as string[]
+    },
+    links: {
+      id: "links",
+      label: "Links",
+      title: "Links importantes",
+      items: safeLinks.map((link) => link.label)
+    }
+  }[kind];
+
+  if (!data.items.length) return null;
+
+  return (
+    <section id={data.id} className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
+      <div className="rounded-[1.4rem] border border-[var(--store-border)] bg-white p-5 shadow-sm">
+        <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--store-primary)]">{data.label}</p>
+        <h2 className="mt-2 text-2xl font-black">{data.title}</h2>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {kind === "links" ? safeLinks.map((link) => (
+            <a key={link.id} href={link.url} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-[var(--store-bg-soft)] px-4 text-sm font-black text-[var(--store-primary)]">
+              <LinkIcon className="h-4 w-4" />
+              {link.label}
+            </a>
+          )) : data.items.map((item) => (
+            <p key={item} className="rounded-2xl bg-[var(--store-bg-soft)] px-4 py-3 text-sm font-bold text-[var(--store-muted)]">{item}</p>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function EmptyFutureSection() {
+  return null;
 }
 
 function ServiceCard({ service, index, openBooking }: { service: Service; index: number; openBooking: (serviceId?: string) => void }) {
@@ -947,7 +1112,7 @@ function GallerySection({ gallery, setPreviewImage }: { gallery: GalleryItem[]; 
 }
 
 function FinalCallToAction({ context }: { context: StorefrontContext }) {
-  const { headline, whatsapp, openBooking } = context;
+  const { headline, whatsapp, ctaPrimaryText, ctaSecondaryText, openBooking } = context;
 
   return (
     <section className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
@@ -959,9 +1124,9 @@ function FinalCallToAction({ context }: { context: StorefrontContext }) {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <button type="button" onClick={() => openBooking()} className="min-h-12 rounded-2xl bg-white px-5 font-black text-slate-950">
-              Agendar agora
+              {ctaPrimaryText}
             </button>
-            {whatsapp ? <a href={whatsapp} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/40 px-5 font-black">Falar no WhatsApp</a> : null}
+            {whatsapp ? <a href={whatsapp} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/40 px-5 font-black">{ctaSecondaryText}</a> : null}
           </div>
         </div>
       </div>
@@ -970,7 +1135,7 @@ function FinalCallToAction({ context }: { context: StorefrontContext }) {
 }
 
 function PublicStorefrontFooter({ context }: { context: StorefrontContext }) {
-  const { showcase, logoUrl, description, address, organization, whatsapp, phone, instagram, safeLinks } = context;
+  const { showcase, displayName, logoUrl, description, address, organization, whatsapp, phone, instagram, safeLinks } = context;
   const contactLinks = [
     whatsapp ? { label: "WhatsApp", url: whatsapp, icon: MessageCircle } : null,
     phone ? { label: "Telefone", url: `tel:${phone.replace(/\s/g, "")}`, icon: Phone } : null,
@@ -982,8 +1147,8 @@ function PublicStorefrontFooter({ context }: { context: StorefrontContext }) {
       <div className="grid gap-8 border-t border-[var(--store-border)] pt-8 lg:grid-cols-[1.1fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-3">
-            <LogoMark logoUrl={logoUrl} title={showcase.title} compact />
-            <strong className="text-lg font-black">{showcase.title}</strong>
+            <LogoMark logoUrl={logoUrl} title={displayName} compact />
+            <strong className="text-lg font-black">{displayName}</strong>
           </div>
           <p className="mt-4 max-w-sm text-sm leading-6 text-[var(--store-muted)]">{description}</p>
           <p className="mt-5 text-xs font-bold text-[var(--store-muted)]">Desenvolvido por Hunter Pro.</p>
@@ -1003,6 +1168,9 @@ function PublicStorefrontFooter({ context }: { context: StorefrontContext }) {
         <div>
           <p className="font-black">Endereco e links</p>
           {address ? <p className="mt-4 text-sm leading-6 text-[var(--store-muted)]">{address}</p> : null}
+          {showcase.service_area ? <p className="mt-2 text-sm leading-6 text-[var(--store-muted)]">Area: {showcase.service_area}</p> : null}
+          {showcase.opening_hours_text ? <p className="mt-2 text-sm leading-6 text-[var(--store-muted)]">Horario: {showcase.opening_hours_text}</p> : null}
+          {showcase.payment_methods_text ? <p className="mt-2 text-sm leading-6 text-[var(--store-muted)]">Pagamento: {showcase.payment_methods_text}</p> : null}
           <div className="mt-4 grid gap-2">
             {safeLinks.map((link) => (
               <a key={link.id} href={link.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-[var(--store-primary)]">
@@ -1014,7 +1182,7 @@ function PublicStorefrontFooter({ context }: { context: StorefrontContext }) {
         </div>
       </div>
       <div className="mt-8 border-t border-[var(--store-border)] pt-4 text-xs font-bold text-[var(--store-muted)]">
-        © {new Date().getFullYear()} {showcase.title}. Todos os direitos reservados.
+        © {new Date().getFullYear()} {displayName}. Todos os direitos reservados.
       </div>
     </footer>
   );
@@ -1065,15 +1233,18 @@ export function PublicStorefront({
   const [previewImage, setPreviewImage] = useState<GalleryItem | null>(null);
   const style = resolveShowcaseTheme(showcase);
   const fontClass = getFontClass(showcase.font_key);
-  const logoUrl = showcase.logo_url || organization.logo_url;
+  const displayName = showcase.commercial_name || showcase.title || organization.name;
+  const logoUrl = showcase.logo_url || showcase.profile_image_url || organization.logo_url;
   const firstServiceImage = services.find((service) => service.image_url)?.image_url;
   const configuredHeroImage = isUsableImage(showcase.hero_image_url) ? showcase.hero_image_url : null;
   const configuredCoverImage = isUsableImage(organization.cover_url) ? organization.cover_url : null;
   const heroPhoto = configuredHeroImage || configuredCoverImage || firstServiceImage;
   const address = showcase.address_text || [organization.address, organization.city, organization.state].filter(Boolean).join(", ");
-  const headline = showcase.subtitle || fallbackHeadline(showcase.title, organization.description);
+  const headline = showcase.subtitle || showcase.slogan || fallbackHeadline(displayName, organization.description);
   const description = showcase.description || organization.description || "Escolha um servico, veja horarios disponiveis e agende em poucos toques.";
-  const whatsapp = whatsappUrl(showcase.whatsapp || organization.whatsapp, `Ola! Quero agendar pela vitrine ${showcase.title}.`);
+  const ctaPrimaryText = showcase.cta_primary_text || "Agendar agora";
+  const ctaSecondaryText = showcase.cta_secondary_text || "Falar no WhatsApp";
+  const whatsapp = whatsappUrl(showcase.whatsapp || organization.whatsapp, `Ola! Quero agendar pela vitrine ${displayName}.`);
   const phone = showcase.phone || organization.phone;
   const instagram = safeExternalUrl(showcase.instagram_url);
   const safeLinks = links.map((link) => ({ ...link, url: safeExternalUrl(link.url) })).filter((link) => link.url);
@@ -1091,6 +1262,9 @@ export function PublicStorefront({
     whatsapp ? { title: "Contato direto", description: "Canal rapido para tirar duvidas.", icon: MessageCircle } : null,
     address ? { title: "Atendimento local", description: "Endereco informado pela empresa.", icon: MapPin } : null
   ].filter(Boolean) as StorefrontContext["trustHighlights"];
+  const sectionVisibility = { ...defaultSectionVisibility, ...(showcase.section_visibility ?? {}) };
+  const savedOrder = showcase.section_order?.filter((key) => defaultSectionOrder.includes(key)) ?? [];
+  const sectionOrder = [...savedOrder, ...defaultSectionOrder.filter((key) => !savedOrder.includes(key))];
 
   function openBooking(serviceId?: string) {
     if (serviceId) setSelectedServiceId(serviceId);
@@ -1101,7 +1275,7 @@ export function PublicStorefront({
   async function shareShowcase() {
     const url = window.location.href;
     if (navigator.share) {
-      await navigator.share({ title: showcase.title, text: headline, url });
+      await navigator.share({ title: displayName, text: headline, url });
       return;
     }
     await navigator.clipboard.writeText(url);
@@ -1118,7 +1292,10 @@ export function PublicStorefront({
     heroPhoto,
     address,
     headline,
+    displayName,
     description,
+    ctaPrimaryText,
+    ctaSecondaryText,
     whatsapp,
     phone,
     instagram,
@@ -1130,16 +1307,29 @@ export function PublicStorefront({
     openBooking,
     shareShowcase
   };
+  const renderSection = (key: string) => {
+    if (sectionVisibility[key] === false) return null;
+
+    if (key === "hero") return <PublicStorefrontHero key={key} context={context} />;
+    if (key === "trust") return <TrustHighlights key={key} items={trustHighlights} />;
+    if (key === "about") return <AboutSection key={key} context={context} />;
+    if (key === "services") return <ServicesSection key={key} context={context} />;
+    if (key === "professionals") return <ProfessionalsSection key={key} professionals={professionals} />;
+    if (key === "gallery") return <GallerySection key={key} gallery={gallery} setPreviewImage={setPreviewImage} />;
+    if (key === "reviews") return <EmptyFutureSection key={key} />;
+    if (key === "promotions") return <EmptyFutureSection key={key} />;
+    if (key === "contact" || key === "hours" || key === "payments" || key === "links") {
+      return <DetailsSection key={key} kind={key} context={context} />;
+    }
+    if (key === "cta") return <FinalCallToAction key={key} context={context} />;
+    if (key === "footer") return <PublicStorefrontFooter key={key} context={context} />;
+    return null;
+  };
 
   return (
     <main style={style} className={`${fontClass} min-h-screen bg-[var(--store-bg)] text-[var(--store-text)]`}>
       <PublicStorefrontHeader context={context} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
-      <PublicStorefrontHero context={context} />
-      <TrustHighlights items={trustHighlights} />
-      <ServicesSection context={context} />
-      <GallerySection gallery={gallery} setPreviewImage={setPreviewImage} />
-      <FinalCallToAction context={context} />
-      <PublicStorefrontFooter context={context} />
+      {sectionOrder.map(renderSection)}
       <MobileBottomNavigation context={context} />
 
       <BookingDialog
