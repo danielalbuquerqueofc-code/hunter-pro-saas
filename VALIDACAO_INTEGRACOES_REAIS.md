@@ -90,6 +90,17 @@ Pendente: configurar chave sandbox/producao e webhook real.
 - `npm.cmd run typecheck`: aprovado.
 - `npm.cmd test`: aprovado.
 - `npm.cmd run build`: aprovado.
+- `npm.cmd audit --audit-level=moderate`: aprovado, 0 vulnerabilidades.
+
+## Atualizacao de dependencias
+
+- `npm audit fix` aplicado em 2026-08-10.
+- Next.js atualizado para `16.3.0`.
+- Dependencias transitivas vulneraveis corrigidas:
+  - `postcss`
+  - `nanoid`
+  - `js-yaml`
+  - `sharp`
 
 ## Pendencias antes de piloto comercial
 
